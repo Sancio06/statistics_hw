@@ -104,6 +104,45 @@
                 <!-- JS will output step-by-step table here -->
             </div>
         </section>
+        <!-- Section 4: Statistical Exploration -->
+        <section class="hw-card">
+            <h2>4. Statistical Exploration & Cryptographic Properties</h2>
+            <p>
+                By varying the private key $k \in [1, 16]$ on $y^2 \equiv x^3 + 7 \pmod{17}$, we observe the distribution of coordinates $(x, y)$ and their bit patterns:
+            </p>
+
+            <div style="text-align: center; margin: 15px 0;">
+                <button id="analyzeBtn" class="btn">Run Statistical Analysis on All Points</button>
+            </div>
+
+            <div id="statsOutput" style="margin-top: 15px;"></div>
+
+            <h3 style="margin-top: 25px;">Cryptographic Discussion</h3>
+            
+            <div style="background-color: #fcfaff; border-left: 4px solid #7b42bc; padding: 15px; border-radius: 6px; margin-top: 10px;">
+                <p><strong>1. Uniformity & Frequency of Coordinates:</strong></p>
+                <p>
+                    On a finite field $\mathbb{F}_p$, scalar multiplication produces discrete points that appear pseudo-randomly distributed over the curve's valid subgroup. However, not all $(x, y)$ values in $[0, p-1]$ exist because $x^3 + 7 \pmod p$ must be a quadratic residue for $y$ to exist.
+                </p>
+
+                <p><strong>2. Avalanche Effect & Input/Output Correlation:</strong></p>
+                <p>
+                    Unlike cryptographic hash functions (e.g., SHA-256), elliptic curve scalar multiplication $Q = kG$ preserves an underlying algebraic group structure:
+                    $$ (k_1 + k_2)G = k_1 G + k_2 G $$
+                    This homomorphism means $Q$ does <em>not</em> exhibit a true random avalanche effect. Small changes in $k$ do not randomly scatter bits; instead, they follow deterministic group addition rules.
+                </p>
+
+                <p><strong>3. One-Way Function vs. Hash Function:</strong></p>
+                <ul>
+                    <li>
+                        <strong>Elliptic Curve ($k \to kG$):</strong> Acts as a <i>trapdoor one-way function</i> based on ECDLP. It maps a scalar to a point on a specific group structure, making it ideal for <strong>asymmetric key generation and digital signatures</strong>.
+                    </li>
+                    <li>
+                        <strong>Cryptographic Hash Function:</strong> Designed for <i>pre-image resistance, second pre-image resistance, and collision resistance</i> with maximum bit diffusion and strict avalanche behaviour, mapping arbitrary inputs to fixed-size bitstrings without preserving algebraic structure.
+                    </li>
+                </ul>
+            </div>
+        </section>
     </main>
 
     <footer>
