@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homework 2 - Wallet Pipeline & Standards</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="script.js" defer></script>
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1>Homework 2</h1>
+        <p>Ethereum Wallet Pipeline: Key Derivation, Standards & Cryptographic Primitives</p>
+        <nav>
+            <a href="index.html">&larr; Back to Home</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Section 1: The Cryptographic Pipeline -->
+        <section class="hw-card">
+            <h2>1. Ethereum Wallet Cryptographic Pipeline</h2>
+            <p>Modern crypto wallets (e.g., MetaMask, Rabby, Exodus) construct deterministic addresses through a multi-stage pipeline:</p>
+            
+            <div style="background-color: #fcfaff; border-left: 4px solid #7b42bc; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.95rem; margin: 15px 0;">
+                Mnemonic Words &rarr; <strong>[BIP-39]</strong> &rarr; Seed (512 bits) <br>
+                &rarr; <strong>[BIP-32 / BIP-44]</strong> &rarr; Private Key ($k$) <br>
+                &rarr; <strong>[secp256k1]</strong> &rarr; Public Key ($Q = kG$) <br>
+                &rarr; <strong>[Keccak-256]</strong> &rarr; Raw Address (Last 20 Bytes) <br>
+                &rarr; <strong>[EIP-55]</strong> &rarr; <strong>Checksummed Address</strong>
+            </div>
+
+            <h3>Roles of Key Standards &amp; Primitives</h3>
+            <ul>
+                <li><strong>BIP-39:</strong> Converts entropy (128–256 bits) into a readable 12/24-word mnemonic phrase and derives a binary seed using PBKDF2 with HMAC-SHA512.</li>
+                <li><strong>BIP-32:</strong> Defines Hierarchical Deterministic (HD) wallet tree creation from a single seed using master keys and chain codes.</li>
+                <li><strong>BIP-44:</strong> Standardizes derivation paths. For Ethereum: <code>m / 44' / 60' / 0' / 0 / index</code>.</li>
+                <li><strong>secp256k1:</strong> Elliptic curve used to compute the public key $Q = kG$ from private key $k$.</li>
+                <li><strong>Keccak-256:</strong> Cryptographic hash function used to hash the uncompressed public key (64 bytes). The address is formed by taking the last 20 bytes.</li>
+                <li><strong>EIP-55:</strong> Encodes mixed-case letters based on the Keccak-256 hash of the address string to detect typing errors.</li>
+            </ul>
+        </section>
+
+        <!-- Section 2: Distinction of Concepts -->
+        <section class="hw-card">
+            <h2>2. Distinction of Fundamental Concepts</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                    <h4 style="color: #5b3286; margin-top: 0;">Key Derivation vs. Generation</h4>
+                    <p style="font-size: 0.9rem;"><strong>Generation</strong> relies on true random entropy. <strong>Derivation</strong> deterministically computes child keys from a master secret via pseudo-random functions.</p>
+                </div>
+                <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                    <h4 style="color: #5b3286; margin-top: 0;">Public-Key Cryptography</h4>
+                    <p style="font-size: 0.9rem;">Asymmetric math (secp256k1) enabling digital signatures: private keys sign transactions, public keys verify them without revealing the secret.</p>
+                </div>
+                <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                    <h4 style="color: #5b3286; margin-top: 0;">Hashing vs. Checksum</h4>
+                    <p style="font-size: 0.9rem;"><strong>Hashing</strong> (Keccak-256) is a one-way transformation mapping data to fixed bitstrings. <strong>Checksums</strong> (EIP-55) append redundancy to detect user input errors.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Historical & Temporal Context -->
+        <section class="hw-card">
+            <h2>3. Timeline &amp; Cryptographic Evolution</h2>
+            <p>Chronological progression of key standards and primitives:</p>
+            
+            <ol style="line-height: 1.8;">
+                <li><strong>RSA (1977):</strong> First widely used public-key asymmetric cryptosystem based on integer factorization.</li>
+                <li><strong>SHA-2 / SHA-512 (2001):</strong> NIST standardized hash functions built on the Merkle–Damgård structure.</li>
+                <li><strong>BIP-32 (2012):</strong> Introduced Bitcoin HD wallets to manage tree-structured key hierarchies.</li>
+                <li><strong>BIP-39 (2013):</strong> Standardized human-readable mnemonic recovery phrases.</li>
+                <li><strong>BIP-44 (2014):</strong> Multi-account HD wallet path conventions for multiple cryptocurrencies.</li>
+                <li><strong>SHA-3 (2015):</strong> NIST standard based on the Keccak sponge construction.</li>
+                <li><strong>EIP-55 (2016):</strong> Ethereum proposal for mixed-case checksum address formatting.</li>
+            </ol>
+
+            <div style="background-color: #fcfaff; border: 1px solid #e5d8f2; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                <h4 style="color: #5b3286; margin-top: 0;">SHA-2/512 vs. Keccak-256 vs. NIST SHA-3</h4>
+                <p style="font-size: 0.9rem;">
+                    SHA-2 uses a Merkle–Damgård construction, whereas Keccak uses a <strong>sponge construction</strong>. 
+                    Although NIST standardized SHA-3 based on Keccak, Ethereum adopted <strong>Keccak-256 prior to official standardization</strong>. 
+                    Official SHA3-256 uses different domain separation padding (<code>0x06</code>) compared to Ethereum's original Keccak-256 (<code>0x01</code>), making their output hashes completely different for identical inputs.
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 4: System Specialization & Statistics -->
+        <section class="hw-card">
+            <h2>4. Specialized Roles &amp; Statistical Properties</h2>
+            <h3>Why Not a Single Algorithm?</h3>
+            <p>
+                No single algorithm fulfills all wallet requirements. A secure system separates tasks across specialized primitives:
+            </p>
+            <ul>
+                <li><strong>BIP-39/32/44:</strong> Solves <i>usability and key management</i> (backing up hundreds of addresses with 12 words).</li>
+                <li><strong>secp256k1:</strong> Solves <i>authentication and ownership</i> through mathematical asymmetry and signature generation.</li>
+                <li><strong>Keccak-256:</strong> Solves <i>pseudonymity and address length reduction</i> (shrinking 64-byte public keys to 20-byte addresses).</li>
+                <li><strong>EIP-55:</strong> Solves <i>human error prevention</i> without changing underlying protocol-level transactions.</li>
+            </ul>
+
+            <h3>Statistical Properties</h3>
+            <p style="font-size: 0.95rem;">
+                Keccak-256 exhibits strict <strong>avalanche behavior</strong> (changing 1 input bit changes ~50% of output bits) and uniform bit distribution. 
+                In contrast, secp256k1 public keys ($Q = kG$) preserve algebraic group structure. Truncating the Keccak-256 hash to 20 bytes provides $2^{160}$ address space security against collision/preimage attacks while offering ideal statistical uniformity.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Statistics &amp; Cryptography MSc Portfolio | Hosted on GitHub Pages</p>
+    </footer>
+
+</body>
+</html>
