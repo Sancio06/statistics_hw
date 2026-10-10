@@ -39,20 +39,44 @@
 
         <!-- Section 2: Mathematical Operations -->
         <section class="hw-card">
-            <h2>2. Elliptic Curve Arithmetic over $\mathbb{F}_p$</h2>
-            <p>To add points $P = (x_1, y_1)$ and $R = (x_2, y_2)$ on $y^2 = x^3 + a x + b \pmod p$:</p>
-            <ul>
-                <li><strong>Slope $s$ when $P \neq R$ (Point Addition):</strong> 
-                    $s \equiv \frac{y_2 - y_1}{x_2 - x_1} \pmod p$
-                </li>
-                <li><strong>Slope $s$ when $P = R$ (Point Doubling):</strong> 
-                    $s \equiv \frac{3x_1^2 + a}{2y_1} \pmod p$
-                </li>
-                <li><strong>Next Point $(x_3, y_3)$:</strong><br>
-                    $x_3 \equiv s^2 - x_1 - x_2 \pmod p$<br>
-                    $y_3 \equiv s(x_1 - x_3) - y_1 \pmod p$
-                </li>
-            </ul>
+            <h2>2. Elliptic Curve Arithmetic over F<sub>p</sub></h2>
+            <p>To find the next point when adding P = (x<sub>1</sub>, y<sub>1</sub>) and R = (x<sub>2</sub>, y<sub>2</sub>) on our curve y<sup>2</sup> ≡ x<sup>3</sup> + ax + b (mod p):</p>
+            
+            <div class="math-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 15px;">
+                
+                <!-- Point Addition -->
+                <div class="math-box" style="background-color: #fcfaff; border: 1.5px solid #e5d8f2; border-radius: 12px; padding: 15px;">
+                    <h4 style="color: #5b3286; margin-top: 0; text-align: center;">POINT ADDITION (P ≠ R)</h4>
+                    <p style="text-align: center; font-size: 1.15rem; font-family: 'Georgia', serif; margin: 10px 0;">
+                        Slope (s) ≡ <span style="border-bottom: 1.5px solid #3f225f; padding: 0 4px; display: inline-block; transform: translateY(-4px);">y<sub>2</sub> - y<sub>1</sub></span><br>
+                        <span style="display: inline-block; transform: translateY(-6px); padding: 0 10px;">x<sub>2</sub> - x<sub>1</sub></span> (mod p)
+                    </p>
+                    <p style="font-size: 0.85rem; color: #78688b; text-align: center; margin: 0;">Used when adding two different points</p>
+                </div>
+
+                <!-- Point Doubling -->
+                <div class="math-box" style="background-color: #fcfaff; border: 1.5px solid #e5d8f2; border-radius: 12px; padding: 15px;">
+                    <h4 style="color: #5b3286; margin-top: 0; text-align: center;">POINT DOUBLING (P = R)</h4>
+                    <p style="text-align: center; font-size: 1.15rem; font-family: 'Georgia', serif; margin: 10px 0;">
+                        Slope (s) ≡ <span style="border-bottom: 1.5px solid #3f225f; padding: 0 4px; display: inline-block; transform: translateY(-4px);">3x<sub>1</sub><sup>2</sup> + a</span><br>
+                        <span style="display: inline-block; transform: translateY(-6px); padding: 0 25px;">2y<sub>1</sub></span> (mod p)
+                    </p>
+                    <p style="font-size: 0.85rem; color: #78688b; text-align: center; margin: 0;">Used when adding a point to itself (raddoppio)</p>
+                </div>
+
+            </div>
+
+            <!-- Calculating Next Point -->
+            <div class="math-box" style="background-color: #fcfaff; border: 1.5px solid #e5d8f2; border-radius: 12px; padding: 18px; margin-top: 20px;">
+                <h4 style="color: #5b3286; margin-top: 0; text-align: center;">CALCULATING THE NEXT POINT (x<sub>3</sub>, y<sub>3</sub>)</h4>
+                <p style="text-align: center; font-size: 1.2rem; font-family: 'Georgia', serif; margin: 10px 0; line-height: 1.8;">
+                    <strong>x<sub>3</sub></strong> ≡ s<sup>2</sup> - x<sub>1</sub> - x<sub>2</sub> (mod p) <br>
+                    <strong>y<sub>3</sub></strong> ≡ s(x<sub>1</sub> - x<sub>3</sub>) - y<sub>1</sub> (mod p)
+                </p>
+                <p style="font-size: 0.85rem; color: #78688b; text-align: center; margin: 0;">
+                    These formulas apply to both cases once the slope <i>s</i> is found. Note that <i>p = 17</i> and <i>a = 0</i> for our curve.
+                </p>
+            </div>
         </section>
 
         <!-- Section 3: Interactive Calculation -->
