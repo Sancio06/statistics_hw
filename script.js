@@ -1,6 +1,6 @@
 // Toy Elliptic Curve parameters: y^2 = x^3 + 7 (mod 17)
 const P = 17;
-const A = 0; // x^3 + 0*x + 7
+const A = 0;
 const G = { x: 1, y: 5 };
 
 // Helper function for Modular Inverse (Extended Euclidean Algorithm)
@@ -29,16 +29,13 @@ function pointAdd(P1, P2) {
 
     let s;
     if (P1.x === P2.x && P1.y === P2.y) {
-        // Point Doubling: s = (3*x1^2 + a) / (2*y1) mod p
         let num = (3 * P1.x * P1.x + A) % P;
         let den = (2 * P1.y) % P;
-        if (den === 0) return null; // Point at infinity
+        if (den === 0) return null;
         s = (num * modInverse(den, P)) % P;
     } else if (P1.x === P2.x) {
-        // P1 + (-P1) = Point at Infinity
         return null;
     } else {
-        // Point Addition: s = (y2 - y1) / (x2 - x1) mod p
         let num = (P2.y - P1.y) % P;
         let den = (P2.x - P1.x) % P;
         s = (num * modInverse(den, P)) % P;
@@ -76,7 +73,7 @@ function computeSequence(k) {
     return steps;
 }
 
-// Render Results on Page
+// Render Results on Section 3
 function runComputation() {
     const kInput = document.getElementById("privateKeyInput");
     const outputBox = document.getElementById("outputBox");
@@ -122,7 +119,7 @@ function runComputation() {
         <div style="margin-top: 20px; padding: 15px; background-color: #f4f0f8; border-left: 4px solid #7b42bc; border-radius: 8px;">
             <h4 style="margin: 0 0 5px 0; color: #3f225f;">Final Result (TOY PUBLIC KEY):</h4>
             <p style="margin: 0; font-size: 1.1rem;">
-                Private Key $k = ${k}$ &rarr; <strong>Public Key $Q = ${k}G = ${finalPoint ? `(${finalPoint.x},${finalPoint.y})` : 'Infinity'}$</strong>
+                Private Key k = ${k} &rarr; <strong>Public Key Q = ${k}G = ${finalPoint ? `(${finalPoint.x},${finalPoint.y})` : 'Infinity'}</strong>
             </p>
         </div>
     `;
@@ -130,57 +127,57 @@ function runComputation() {
     outputBox.innerHTML = tableHtml;
 }
 
-// Event Listener on Load
-document.addEventListener("DOMContentLoaded", () => {
-    runComputation();
-    const btn = document.getElementById("calcBtn");
-    if (btn) {
-        btn.addEventListener("click", runComputation);
-    }
-});
-// Statistical Analysis of all valid scalar points
+// Section 4: Statistical Analysis
 function runStatisticalAnalysis() {
     const statsOutput = document.getElementById("statsOutput");
     if (!statsOutput) return;
 
-    let pointsList = [];
+    let steps = computeSequence(18);
     let xFreq = {}, yFreq = {};
-    let bitOnes = [0, 0, 0, 0, 0]; // 5 bits needed for numbers up to 17
+    let bitOnes = [0, 0, 0, 0, 0];
 
-    for (let k = 1; k <= 18; k++) {
-        let pt = pointAdd(k === 1 ? null : computeSequence(k-1)[k-2].point, G);
-        // Using computeSequence output directly
-        let seq = computeSequence(k);
-        let currentPoint = seq[seq.length - 1].point;
+    steps.forEach(s => {
+        if (s.point) {
+            xFreq[s.point.x] = (xFreq[s.point.x] || 0) + 1;
+            yFreq[s.point.y] = (yFreq[s.point.y] || 0) + 1;
 
-        if (currentPoint) {
-            pointsList.push({ k, x: currentPoint.x, y: currentPoint.y });
-            xFreq[currentPoint.x] = (xFreq[currentPoint.x] || 0) + 1;
-            yFreq[currentPoint.y] = (yFreq[currentPoint.y] || 0) + 1;
-
-            // Bit distribution for x coordinate
-            let bin = currentPoint.x.toString(2).padStart(5, '0');
+            let bin = s.point.x.toString(2).padStart(5, '0');
             for (let b = 0; b < 5; b++) {
                 if (bin[b] === '1') bitOnes[b]++;
             }
         }
-    }
+    });
 
     let html = `
-        <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
-            <h4>Summary Statistics ($k \in [1, 18]$)</h4>
-            <p><strong>Total Valid Points Generated:</strong> ${pointsList.length}</p>
+        <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2; margin-bottom: 15px;">
+            <h4 style="color: #3f225f; margin-top: 0;">Summary Statistics ($k \\in [1, 18]$)</h4>
             <p><strong>Unique X Coordinates Observed:</strong> ${Object.keys(xFreq).join(", ")}</p>
-            <p><strong>Bit Frequency (1s per position in X binary):</strong> [ ${bitOnes.join(" , ")} ]</p>
+            <p><strong>Bit Frequency of X Coordinates (1s per position):</strong> [ ${bitOnes.join(" , ")} ]</p>
         </div>
     `;
 
     statsOutput.innerHTML = html;
+
+    // Reprocess MathJax if loaded
+    if (window.MathJax && window.MathJax.typeset) {
+        window.MathJax.typeset();
+    }
 }
 
-// Attach listener to stats button after DOM loads
+// Initializing Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
+    runComputation();
+
+    const calcBtn = document.getElementById("calcBtn");
+    if (calcBtn) {
+        calcBtn.addEventListener("click", runComputation);
+    }
+
     const analyzeBtn = document.getElementById("analyzeBtn");
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener("click", runStatisticalAnalysis);
+    }
+});
     if (analyzeBtn) {
         analyzeBtn.addEventListener("click", runStatisticalAnalysis);
     }
