@@ -1,9 +1,9 @@
-// Parameters for Toy Curve: y^2 = x^3 + 7 (mod 17)
+// Parameter Definition: y^2 = x^3 + 7 (mod 17)
 const P = 17;
 const A = 0;
 const G = { x: 1, y: 5 };
 
-// Extended Euclidean Algorithm for Modular Inverse
+// Modular Inverse (Extended Euclidean Algorithm)
 function modInverse(a, m) {
     let m0 = m;
     let y = 0, x = 1;
@@ -31,10 +31,10 @@ function pointAdd(P1, P2) {
     if (P1.x === P2.x && P1.y === P2.y) {
         let num = (3 * P1.x * P1.x + A) % P;
         let den = (2 * P1.y) % P;
-        if (den === 0) return null;
+        if (den === 0) return null; // Point at infinity
         s = (num * modInverse(den, P)) % P;
     } else if (P1.x === P2.x) {
-        return null;
+        return null; // P1 + (-P1) = Infinity
     } else {
         let num = (P2.y - P1.y) % P;
         let den = (P2.x - P1.x) % P;
@@ -47,10 +47,10 @@ function pointAdd(P1, P2) {
     let y3 = (s * (P1.x - x3) - P1.y) % P;
     y3 = ((y3 % P) + P) % P;
 
-    return { x: x3, y: y3, slope: s };
+    return { x: x3, y: y3 };
 }
 
-// Compute sequence 1G, 2G, ..., kG
+// Compute sequence 1G, 2G, ..., kG safely
 function computeSequence(k) {
     let steps = [];
     let current = G;
@@ -69,7 +69,7 @@ function computeSequence(k) {
     return steps;
 }
 
-// Function for Section 3: Compute Public Key
+// Section 3: Compute Public Key
 function runComputation() {
     const kInput = document.getElementById("privateKeyInput");
     const outputBox = document.getElementById("outputBox");
@@ -123,7 +123,7 @@ function runComputation() {
     outputBox.innerHTML = tableHtml;
 }
 
-// Function for Section 4: Statistical Analysis
+// Section 4: Run Statistical Analysis
 function runStatisticalAnalysis() {
     const statsOutput = document.getElementById("statsOutput");
     if (!statsOutput) return;
@@ -149,28 +149,31 @@ function runStatisticalAnalysis() {
             <h4 style="color: #3f225f; margin-top: 0;">Summary Statistics for k = 1 to 18</h4>
             <p style="margin: 5px 0;"><strong>Observed X Coordinates:</strong> ${Object.keys(xFreq).join(", ")}</p>
             <p style="margin: 5px 0;"><strong>Observed Y Coordinates:</strong> ${Object.keys(yFreq).join(", ")}</p>
-            <p style="margin: 5px 0;"><strong>X Coordinate Bit Frequencies (Position 1 to 5):</strong> [ ${bitOnes.join(", ")} ]</p>
+            <p style="margin: 5px 0;"><strong>X Bit Frequencies (Position 1 to 5):</strong> [ ${bitOnes.join(", ")} ]</p>
         </div>
     `;
 
     statsOutput.innerHTML = html;
 }
 
-// Attach Event Listeners on Page Load
-window.onload = function() {
+// Event Listeners Initialization
+function initApp() {
     runComputation();
 
     const calcBtn = document.getElementById("calcBtn");
     if (calcBtn) {
-        calcBtn.onclick = runComputation;
+        calcBtn.addEventListener("click", runComputation);
     }
 
     const analyzeBtn = document.getElementById("analyzeBtn");
     if (analyzeBtn) {
-        analyzeBtn.onclick = runStatisticalAnalysis;
-    }
-};
-    if (analyzeBtn) {
         analyzeBtn.addEventListener("click", runStatisticalAnalysis);
     }
-});
+}
+
+// Check if document is already loaded or wait for DOMContentLoaded
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
+} else {
+    initApp();
+}
