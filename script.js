@@ -1,9 +1,9 @@
-// Toy Elliptic Curve parameters: y^2 = x^3 + 7 (mod 17)
+// Parameters for Toy Curve: y^2 = x^3 + 7 (mod 17)
 const P = 17;
 const A = 0;
 const G = { x: 1, y: 5 };
 
-// Helper function for Modular Inverse (Extended Euclidean Algorithm)
+// Extended Euclidean Algorithm for Modular Inverse
 function modInverse(a, m) {
     let m0 = m;
     let y = 0, x = 1;
@@ -22,7 +22,7 @@ function modInverse(a, m) {
     return x;
 }
 
-// Point Addition on Elliptic Curve over F_p
+// Elliptic Curve Point Addition over F_p
 function pointAdd(P1, P2) {
     if (P1 === null) return P2;
     if (P2 === null) return P1;
@@ -54,26 +54,22 @@ function pointAdd(P1, P2) {
 function computeSequence(k) {
     let steps = [];
     let current = G;
-    steps.push({ step: 1, point: G, desc: "Base Point G" });
+    steps.push({ step: 1, point: G });
 
     for (let i = 2; i <= k; i++) {
         if (current === null) {
-            steps.push({ step: i, point: null, desc: "Point at Infinity" });
+            steps.push({ step: i, point: null });
             current = G;
             continue;
         }
         let next = pointAdd(current, G);
         current = next;
-        steps.push({ 
-            step: i, 
-            point: current, 
-            desc: current ? `(${current.x}, ${current.y})` : "Point at Infinity" 
-        });
+        steps.push({ step: i, point: current });
     }
     return steps;
 }
 
-// Render Results on Section 3
+// Function for Section 3: Compute Public Key
 function runComputation() {
     const kInput = document.getElementById("privateKeyInput");
     const outputBox = document.getElementById("outputBox");
@@ -81,7 +77,7 @@ function runComputation() {
 
     const k = parseInt(kInput.value);
     if (isNaN(k) || k < 1) {
-        outputBox.innerHTML = "<p style='color:red;'>Please enter a valid private key k ≥ 1.</p>";
+        outputBox.innerHTML = "<p style='color:red;'>Please enter a valid key k ≥ 1.</p>";
         return;
     }
 
@@ -89,8 +85,8 @@ function runComputation() {
     const finalPoint = steps[steps.length - 1].point;
 
     let tableHtml = `
-        <h3>Step-by-Step Multiplication (1G to ${k}G):</h3>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; text-align: left;">
+        <h3 style="color:#3f225f; margin-bottom:10px;">Multiplication Sequence (1G to ${k}G):</h3>
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
                 <tr style="background-color: #e5d8f2; color: #3f225f;">
                     <th style="padding: 8px; border: 1px solid #ccc;">Scalar (m)</th>
@@ -102,7 +98,7 @@ function runComputation() {
     `;
 
     steps.forEach(s => {
-        let coordText = s.point ? `(${s.point.x}, ${s.point.y})` : "O (Infinity)";
+        let coordText = s.point ? `(${s.point.x}, ${s.point.y})` : "Infinity (Point at Infinity)";
         tableHtml += `
             <tr>
                 <td style="padding: 8px; border: 1px solid #ddd;">${s.step}</td>
@@ -116,10 +112,10 @@ function runComputation() {
             </tbody>
         </table>
         
-        <div style="margin-top: 20px; padding: 15px; background-color: #f4f0f8; border-left: 4px solid #7b42bc; border-radius: 8px;">
-            <h4 style="margin: 0 0 5px 0; color: #3f225f;">Final Result (TOY PUBLIC KEY):</h4>
-            <p style="margin: 0; font-size: 1.1rem;">
-                Private Key k = ${k} &rarr; <strong>Public Key Q = ${k}G = ${finalPoint ? `(${finalPoint.x},${finalPoint.y})` : 'Infinity'}</strong>
+        <div style="margin-top: 15px; padding: 12px 15px; background-color: #f4f0f8; border-left: 4px solid #7b42bc; border-radius: 6px;">
+            <p style="margin: 0; font-size: 1.05rem;">
+                <strong>Private Key (k):</strong> ${k} &nbsp;|&nbsp; 
+                <strong>Toy Public Key Q = ${k}G:</strong> ${finalPoint ? `(${finalPoint.x},${finalPoint.y})` : 'Infinity'}
             </p>
         </div>
     `;
@@ -127,7 +123,7 @@ function runComputation() {
     outputBox.innerHTML = tableHtml;
 }
 
-// Section 4: Statistical Analysis
+// Function for Section 4: Statistical Analysis
 function runStatisticalAnalysis() {
     const statsOutput = document.getElementById("statsOutput");
     if (!statsOutput) return;
@@ -149,35 +145,31 @@ function runStatisticalAnalysis() {
     });
 
     let html = `
-        <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2; margin-bottom: 15px;">
-            <h4 style="color: #3f225f; margin-top: 0;">Summary Statistics ($k \\in [1, 18]$)</h4>
-            <p><strong>Unique X Coordinates Observed:</strong> ${Object.keys(xFreq).join(", ")}</p>
-            <p><strong>Bit Frequency of X Coordinates (1s per position):</strong> [ ${bitOnes.join(" , ")} ]</p>
+        <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+            <h4 style="color: #3f225f; margin-top: 0;">Summary Statistics for k = 1 to 18</h4>
+            <p style="margin: 5px 0;"><strong>Observed X Coordinates:</strong> ${Object.keys(xFreq).join(", ")}</p>
+            <p style="margin: 5px 0;"><strong>Observed Y Coordinates:</strong> ${Object.keys(yFreq).join(", ")}</p>
+            <p style="margin: 5px 0;"><strong>X Coordinate Bit Frequencies (Position 1 to 5):</strong> [ ${bitOnes.join(", ")} ]</p>
         </div>
     `;
 
     statsOutput.innerHTML = html;
-
-    // Reprocess MathJax if loaded
-    if (window.MathJax && window.MathJax.typeset) {
-        window.MathJax.typeset();
-    }
 }
 
-// Initializing Event Listeners
-document.addEventListener("DOMContentLoaded", () => {
+// Attach Event Listeners on Page Load
+window.onload = function() {
     runComputation();
 
     const calcBtn = document.getElementById("calcBtn");
     if (calcBtn) {
-        calcBtn.addEventListener("click", runComputation);
+        calcBtn.onclick = runComputation;
     }
 
     const analyzeBtn = document.getElementById("analyzeBtn");
     if (analyzeBtn) {
-        analyzeBtn.addEventListener("click", runStatisticalAnalysis);
+        analyzeBtn.onclick = runStatisticalAnalysis;
     }
-});
+};
     if (analyzeBtn) {
         analyzeBtn.addEventListener("click", runStatisticalAnalysis);
     }
