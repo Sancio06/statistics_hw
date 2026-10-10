@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homework 1 - Public-Key Cryptography</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Homework 1</h1>
+        <p>Public-Key Cryptography: Private Key to Public Key on a Toy Elliptic Curve</p>
+        <nav>
+            <a href="index.html">&larr; Back to Home</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Section 1: Theory & Context -->
+        <section class="hw-card">
+            <h2>1. Theoretical Background</h2>
+            <p>
+                In Ethereum and Bitcoin, public keys are derived from private keys via scalar multiplication on the <strong>secp256k1</strong> curve ($y^2 = x^3 + 7 \pmod p$). 
+                Because the discrete logarithm problem on elliptic curves (ECDLP) is computationally intractable, calculating $Q = kG$ from $k$ is fast, but recovering $k$ from $Q$ is virtually impossible.
+            </p>
+            <p>
+                In this assignment, we demonstrate this principle using a simplified <strong>toy curve</strong> over the finite field $\mathbb{F}_{17}$:
+            </p>
+            <div class="formula-box">
+                $$y^2 \equiv x^3 + 7 \pmod{17}$$
+            </div>
+            <ul>
+                <li><strong>Base Point ($G$):</strong> $(1, 5)$</li>
+                <li><strong>Private Key ($k$):</strong> $6$</li>
+                <li><strong>Public Key ($Q$):</strong> $Q = kG = 6G$</li>
+            </ul>
+        </section>
+
+        <!-- Section 2: Mathematical Operations -->
+        <section class="hw-card">
+            <h2>2. Elliptic Curve Arithmetic over $\mathbb{F}_p$</h2>
+            <p>To add points $P = (x_1, y_1)$ and $R = (x_2, y_2)$ on $y^2 = x^3 + a x + b \pmod p$:</p>
+            <ul>
+                <li><strong>Slope $s$ when $P \neq R$ (Point Addition):</strong> 
+                    $s \equiv \frac{y_2 - y_1}{x_2 - x_1} \pmod p$
+                </li>
+                <li><strong>Slope $s$ when $P = R$ (Point Doubling):</strong> 
+                    $s \equiv \frac{3x_1^2 + a}{2y_1} \pmod p$
+                </li>
+                <li><strong>Next Point $(x_3, y_3)$:</strong><br>
+                    $x_3 \equiv s^2 - x_1 - x_2 \pmod p$<br>
+                    $y_3 \equiv s(x_1 - x_3) - y_1 \pmod p$
+                </li>
+            </ul>
+        </section>
+
+        <!-- Section 3: Interactive Calculation -->
+        <section class="hw-card">
+            <h2>3. Interactive Scalar Multiplication</h2>
+            <p>Select a private key $k$ to compute the corresponding toy public key $Q = kG$:</p>
+            
+            <div class="control-group">
+                <label for="privateKeyInput"><strong>Private Key ($k$):</strong> </label>
+                <input type="number" id="privateKeyInput" value="6" min="1" max="18" style="padding: 5px; border-radius: 8px; border: 1px solid #ccc; width: 60px;">
+                <button id="calcBtn" class="btn" style="padding: 6px 14px; font-size: 0.9rem;">Compute Public Key</button>
+            </div>
+
+            <div id="outputBox" style="margin-top: 20px;">
+                <!-- JS will output step-by-step table here -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Statistics &amp; Cryptography MSc Portfolio | Hosted on GitHub Pages</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
