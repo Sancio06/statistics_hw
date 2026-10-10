@@ -138,3 +138,50 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener("click", runComputation);
     }
 });
+// Statistical Analysis of all valid scalar points
+function runStatisticalAnalysis() {
+    const statsOutput = document.getElementById("statsOutput");
+    if (!statsOutput) return;
+
+    let pointsList = [];
+    let xFreq = {}, yFreq = {};
+    let bitOnes = [0, 0, 0, 0, 0]; // 5 bits needed for numbers up to 17
+
+    for (let k = 1; k <= 18; k++) {
+        let pt = pointAdd(k === 1 ? null : computeSequence(k-1)[k-2].point, G);
+        // Using computeSequence output directly
+        let seq = computeSequence(k);
+        let currentPoint = seq[seq.length - 1].point;
+
+        if (currentPoint) {
+            pointsList.push({ k, x: currentPoint.x, y: currentPoint.y });
+            xFreq[currentPoint.x] = (xFreq[currentPoint.x] || 0) + 1;
+            yFreq[currentPoint.y] = (yFreq[currentPoint.y] || 0) + 1;
+
+            // Bit distribution for x coordinate
+            let bin = currentPoint.x.toString(2).padStart(5, '0');
+            for (let b = 0; b < 5; b++) {
+                if (bin[b] === '1') bitOnes[b]++;
+            }
+        }
+    }
+
+    let html = `
+        <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+            <h4>Summary Statistics ($k \in [1, 18]$)</h4>
+            <p><strong>Total Valid Points Generated:</strong> ${pointsList.length}</p>
+            <p><strong>Unique X Coordinates Observed:</strong> ${Object.keys(xFreq).join(", ")}</p>
+            <p><strong>Bit Frequency (1s per position in X binary):</strong> [ ${bitOnes.join(" , ")} ]</p>
+        </div>
+    `;
+
+    statsOutput.innerHTML = html;
+}
+
+// Attach listener to stats button after DOM loads
+document.addEventListener("DOMContentLoaded", () => {
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener("click", runStatisticalAnalysis);
+    }
+});
