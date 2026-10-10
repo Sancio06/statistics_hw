@@ -92,6 +92,26 @@ footer {
     color: #78688b;
     margin-top: 40px;
 }
+
+.formula-box {
+    background-color: #f4f0f8;
+    border-left: 4px solid #7b42bc;
+    padding: 10px 15px;
+    margin: 15px 0;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.05rem;
+    border-radius: 4px;
+}
+
+.control-group {
+    background: #fafafa;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #e5d8f2;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
     font-size: 0.9em;
     color: #78688b;
     margin-top: 40px;
