@@ -6,6 +6,7 @@
     <title>Homework 2 - Encryption Schemes & Cryptanalysis</title>
     <link rel="stylesheet" href="style.css">
 
+    <!-- MathJax Configuration -->
     <script>
         window.MathJax = {
             tex: {
@@ -35,7 +36,7 @@
             </p>
             <ul>
                 <li><strong>Recipient Keypair:</strong> Private key $k_B$, Public key $Q_B = k_B G$.</li>
-                <li><strong>Encryption:</strong> To encrypt a scalar $m \in [1, 16]$, Alice picks ephemeral key $r=3$. She outputs $C_1 = r G$ and $C_2 = m \cdot (r Q_B)_x \pmod{17}$.</li>
+                <li><strong>Encryption:</strong> To encrypt a scalar $m \in [1, 16]$, Alice picks ephemeral key $r=2$. She outputs $C_1 = r G$ and $C_2 = m \cdot (r Q_B)_x \pmod{17}$.</li>
                 <li><strong>Decryption:</strong> Bob recovers shared secret $S = k_B C_1 = r Q_B$ and computes $m \equiv C_2 \cdot (S_x)^{-1} \pmod{17}$.</li>
             </ul>
 
@@ -140,7 +141,7 @@
         <p>Statistics &amp; Cryptography MSc Portfolio | Hosted on GitHub Pages</p>
     </footer>
 
-    <!-- INLINE JAVASCRIPT FUNCTIONS -->
+    <!-- GUARANTEED GLOBAL JAVASCRIPT SCOPE -->
     <script>
         var P = 17;
         var A = 0;
@@ -211,140 +212,157 @@
             return current;
         }
 
-        function runEccDemo() {
-            var msgInput = document.getElementById("eccMessage");
-            var privInput = document.getElementById("eccPrivKey");
-            var out = document.getElementById("eccOutput");
-            if (!msgInput || !privInput || !out) return;
+        // Attach directly to window object to guarantee accessibility
+        window.runEccDemo = function() {
+            try {
+                var msgInput = document.getElementById("eccMessage");
+                var privInput = document.getElementById("eccPrivKey");
+                var out = document.getElementById("eccOutput");
+                if (!msgInput || !privInput || !out) return;
 
-            var msg = parseInt(msgInput.value);
-            var privKey = parseInt(privInput.value);
+                var msg = parseInt(msgInput.value);
+                var privKey = parseInt(privInput.value);
 
-            if (isNaN(msg) || isNaN(privKey) || msg < 1 || msg >= P || privKey < 1) {
-                out.innerHTML = "<p style='color:red;'>Please enter a valid message m ∈ [1, 16] and key k ≥ 1.</p>";
-                return;
-            }
-
-            var pubKey = multiplyPoint(privKey);
-            var r = 3;
-            var C1 = multiplyPoint(r);
-            var sharedPoint = scalarMultiply(r, pubKey);
-
-            var mask = (sharedPoint && sharedPoint.x !== 0) ? sharedPoint.x : 1;
-            var cipher = (msg * mask) % P;
-            var decrypted = (cipher * modInverse(mask, P)) % P;
-
-            out.innerHTML = `
-                <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc; margin-top: 10px;">
-                    <p style="margin: 4px 0;"><strong>Recipient Public Key Q<sub>B</sub>:</strong> ${pubKey ? `(${pubKey.x},${pubKey.y})` : 'O (Point at Infinity)'}</p>
-                    <p style="margin: 4px 0;"><strong>Ciphertext C<sub>1</sub> (rG):</strong> ${C1 ? `(${C1.x},${C1.y})` : 'O'}, <strong>C<sub>2</sub>:</strong> ${cipher}</p>
-                    <p style="margin: 4px 0;"><strong>Shared Secret Point (rQ<sub>B</sub>):</strong> ${sharedPoint ? `(${sharedPoint.x},${sharedPoint.y})` : 'O'} &rarr; Mask x-coord = ${mask}</p>
-                    <p style="margin: 4px 0; font-size: 1.05rem; color: #3f225f;"><strong>Decrypted Message:</strong> m = ${decrypted} (Original Message: ${msg})</p>
-                </div>
-            `;
-        }
-
-        function runCaesarDemo() {
-            var text = document.getElementById("caesarText").value.toUpperCase();
-            var shift = parseInt(document.getElementById("caesarShift").value);
-            var out = document.getElementById("caesarOutput");
-            if (!out) return;
-
-            var cipher = "";
-            for (var i = 0; i < text.length; i++) {
-                var code = text.charCodeAt(i);
-                if (code >= 65 && code <= 90) {
-                    cipher += String.fromCharCode(((code - 65 + shift) % 26) + 65);
-                } else {
-                    cipher += text[i];
+                if (isNaN(msg) || isNaN(privKey) || msg < 1 || msg >= P || privKey < 1) {
+                    out.innerHTML = "<p style='color:red;'>Please enter a valid message m ∈ [1, 16] and key k ≥ 1.</p>";
+                    return;
                 }
+
+                var pubKey = multiplyPoint(privKey);
+                var r = 2; // Fixed ephemeral scalar for full subgroup stability
+                var C1 = multiplyPoint(r);
+                var sharedPoint = scalarMultiply(r, pubKey);
+
+                var mask = (sharedPoint && sharedPoint.x !== 0) ? sharedPoint.x : 1;
+                var cipher = (msg * mask) % P;
+                var decrypted = (cipher * modInverse(mask, P)) % P;
+
+                out.innerHTML = `
+                    <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc; margin-top: 10px;">
+                        <p style="margin: 4px 0;"><strong>Recipient Public Key Q<sub>B</sub>:</strong> ${pubKey ? `(${pubKey.x},${pubKey.y})` : 'O (Point at Infinity)'}</p>
+                        <p style="margin: 4px 0;"><strong>Ciphertext C<sub>1</sub> (rG):</strong> ${C1 ? `(${C1.x},${C1.y})` : 'O'}, <strong>C<sub>2</sub>:</strong> ${cipher}</p>
+                        <p style="margin: 4px 0;"><strong>Shared Secret Point (rQ<sub>B</sub>):</strong> ${sharedPoint ? `(${sharedPoint.x},${sharedPoint.y})` : 'O'} &rarr; Mask x-coord = ${mask}</p>
+                        <p style="margin: 4px 0; font-size: 1.05rem; color: #3f225f;"><strong>Decrypted Message:</strong> m = ${decrypted} (Original Message: ${msg})</p>
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
             }
+        };
 
-            out.innerHTML = `
-                <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc; margin-top: 10px;">
-                    <p style="margin: 4px 0;"><strong>Plaintext:</strong> ${text}</p>
-                    <p style="margin: 4px 0;"><strong>Ciphertext (Shift +${shift}):</strong> ${cipher}</p>
-                </div>
-            `;
-        }
+        window.runCaesarDemo = function() {
+            try {
+                var text = document.getElementById("caesarText").value.toUpperCase();
+                var shift = parseInt(document.getElementById("caesarShift").value);
+                var out = document.getElementById("caesarOutput");
+                if (!out) return;
 
-        function runBreakCaesar() {
-            var cipherText = document.getElementById("cipherInput").value.toUpperCase();
-            var out = document.getElementById("breakCaesarOutput");
-            if (!out) return;
+                var cipher = "";
+                for (var i = 0; i < text.length; i++) {
+                    var code = text.charCodeAt(i);
+                    if (code >= 65 && code <= 90) {
+                        cipher += String.fromCharCode(((code - 65 + shift) % 26) + 65);
+                    } else {
+                        cipher += text[i];
+                    }
+                }
 
-            var englishFreq = [8.17, 1.49, 2.78, 4.25, 12.70, 2.22, 2.01, 6.09, 6.97, 0.15, 0.77, 4.03, 2.41, 6.75, 7.51, 1.93, 0.09, 5.98, 6.32, 9.05, 2.75, 0.98, 2.36, 0.15, 1.97, 0.07];
+                out.innerHTML = `
+                    <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc; margin-top: 10px;">
+                        <p style="margin: 4px 0;"><strong>Plaintext:</strong> ${text}</p>
+                        <p style="margin: 4px 0;"><strong>Ciphertext (Shift +${shift}):</strong> ${cipher}</p>
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
+            }
+        };
 
-            var bestShift = 0;
-            var minChi2 = Infinity;
+        window.runBreakCaesar = function() {
+            try {
+                var cipherText = document.getElementById("cipherInput").value.toUpperCase();
+                var out = document.getElementById("breakCaesarOutput");
+                if (!out) return;
 
-            for (var s = 0; s < 26; s++) {
-                var counts = new Array(26).fill(0);
-                var total = 0;
+                var englishFreq = [8.17, 1.49, 2.78, 4.25, 12.70, 2.22, 2.01, 6.09, 6.97, 0.15, 0.77, 4.03, 2.41, 6.75, 7.51, 1.93, 0.09, 5.98, 6.32, 9.05, 2.75, 0.98, 2.36, 0.15, 1.97, 0.07];
 
+                var bestShift = 0;
+                var minChi2 = Infinity;
+
+                for (var s = 0; s < 26; s++) {
+                    var counts = new Array(26).fill(0);
+                    var total = 0;
+
+                    for (var i = 0; i < cipherText.length; i++) {
+                        var code = cipherText.charCodeAt(i);
+                        if (code >= 65 && code <= 90) {
+                            var dec = (code - 65 - s + 26) % 26;
+                            counts[dec]++;
+                            total++;
+                        }
+                    }
+
+                    var chi2 = 0;
+                    for (var j = 0; j < 26; j++) {
+                        var expected = (englishFreq[j] / 100) * total;
+                        if (expected > 0) {
+                            chi2 += Math.pow(counts[j] - expected, 2) / expected;
+                        }
+                    }
+
+                    if (chi2 < minChi2) {
+                        minChi2 = chi2;
+                        bestShift = s;
+                    }
+                }
+
+                var recoveredText = "";
                 for (var i = 0; i < cipherText.length; i++) {
                     var code = cipherText.charCodeAt(i);
                     if (code >= 65 && code <= 90) {
-                        var dec = (code - 65 - s + 26) % 26;
-                        counts[dec]++;
-                        total++;
+                        recoveredText += String.fromCharCode(((code - 65 - bestShift + 26) % 26) + 65);
+                    } else {
+                        recoveredText += cipherText[i];
                     }
                 }
 
-                var chi2 = 0;
-                for (var j = 0; j < 26; j++) {
-                    var expected = (englishFreq[j] / 100) * total;
-                    if (expected > 0) {
-                        chi2 += Math.pow(counts[j] - expected, 2) / expected;
+                out.innerHTML = `
+                    <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc; margin-top: 10px;">
+                        <p style="margin: 4px 0;"><strong>Recovered Shift Key (K):</strong> ${bestShift} (Chi-square score: ${minChi2.toFixed(2)})</p>
+                        <p style="margin: 4px 0;"><strong>Decrypted Plaintext:</strong> ${recoveredText}</p>
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        window.runAttackEcc = function() {
+            try {
+                var targetX = parseInt(document.getElementById("targetX").value);
+                var targetY = parseInt(document.getElementById("targetY").value);
+                var out = document.getElementById("attackEccOutput");
+                if (!out) return;
+
+                var foundK = null;
+
+                for (var k = 1; k <= 8; k++) {
+                    var pt = multiplyPoint(k);
+                    if (pt && pt.x === targetX && pt.y === targetY) {
+                        foundK = k;
+                        break;
                     }
                 }
 
-                if (chi2 < minChi2) {
-                    minChi2 = chi2;
-                    bestShift = s;
-                }
+                out.innerHTML = `
+                    <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc; margin-top: 10px;">
+                        ${foundK ? `<p style="color:green; font-weight:bold; margin: 4px 0;">Private Key Recovered! k = ${foundK}</p><p style="margin: 4px 0;">Exhaustive Search Cost: ${foundK} curve point additions.</p>` : `<p style="color:red; margin: 4px 0;">Point (${targetX},${targetY}) is not in the subgroup generated by G=(1,5).</p><p style="margin: 4px 0; font-size: 0.85rem; color: #555;">Valid subgroup points: (1,5), (2,10), (5,9), (12,1), (12,16), (5,8), (2,7), (1,12).</p>`}
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
             }
-
-            var recoveredText = "";
-            for (var i = 0; i < cipherText.length; i++) {
-                var code = cipherText.charCodeAt(i);
-                if (code >= 65 && code <= 90) {
-                    recoveredText += String.fromCharCode(((code - 65 - bestShift + 26) % 26) + 65);
-                } else {
-                    recoveredText += cipherText[i];
-                }
-            }
-
-            out.innerHTML = `
-                <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc; margin-top: 10px;">
-                    <p style="margin: 4px 0;"><strong>Recovered Shift Key (K):</strong> ${bestShift} (Chi-square score: ${minChi2.toFixed(2)})</p>
-                    <p style="margin: 4px 0;"><strong>Decrypted Plaintext:</strong> ${recoveredText}</p>
-                </div>
-            `;
-        }
-
-        function runAttackEcc() {
-            var targetX = parseInt(document.getElementById("targetX").value);
-            var targetY = parseInt(document.getElementById("targetY").value);
-            var out = document.getElementById("attackEccOutput");
-            if (!out) return;
-
-            var foundK = null;
-
-            for (var k = 1; k <= 8; k++) {
-                var pt = multiplyPoint(k);
-                if (pt && pt.x === targetX && pt.y === targetY) {
-                    foundK = k;
-                    break;
-                }
-            }
-
-            out.innerHTML = `
-                <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc; margin-top: 10px;">
-                    ${foundK ? `<p style="color:green; font-weight:bold; margin: 4px 0;">Private Key Recovered! k = ${foundK}</p><p style="margin: 4px 0;">Exhaustive Search Cost: ${foundK} curve point additions.</p>` : `<p style="color:red; margin: 4px 0;">Point (${targetX},${targetY}) is not in the subgroup generated by G=(1,5).</p><p style="margin: 4px 0; font-size: 0.85rem; color: #555;">Valid subgroup points: (1,5), (2,10), (5,9), (12,1), (12,16), (5,8), (2,7), (1,12).</p>`}
-                </div>
-            `;
-        }
+        };
     </script>
 </body>
 </html>
