@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Homework 2 - Encryption Schemes & Cryptanalysis</title>
     <link rel="stylesheet" href="style.css">
-    
-    <script src="script2.js?v=2" defer></script>
 
     <script>
         window.MathJax = {
             tex: {
                 inlineMath: [['$', '$'], ['\\(', '\\)']],
-                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+                displayMath: [['$$', '$$'], ['[', ']']]
             }
         };
     </script>
@@ -49,7 +47,7 @@
                 <label for="eccPrivKey">Recipient Private Key $k_B$: </label>
                 <input type="number" id="eccPrivKey" value="6" min="1" max="8" style="width: 50px; padding: 4px;">
                 &nbsp;&nbsp;
-                <button type="button" id="eccEncryptBtn" onclick="runEccDemo()" class="btn" style="padding: 5px 12px; font-size: 0.85rem; cursor:pointer;">Encrypt / Decrypt</button>
+                <button type="button" id="eccEncryptBtn" class="btn" style="padding: 5px 12px; font-size: 0.85rem; cursor:pointer;">Encrypt / Decrypt</button>
             </div>
             <div id="eccOutput"></div>
         </section>
@@ -70,7 +68,7 @@
                 <label for="caesarShift">Shift Key $K$: </label>
                 <input type="number" id="caesarShift" value="3" min="1" max="25" style="width: 50px; padding: 4px;">
                 &nbsp;&nbsp;
-                <button type="button" id="caesarRunBtn" onclick="runCaesarDemo()" class="btn" style="padding: 5px 12px; font-size: 0.85rem; cursor:pointer;">Process Text</button>
+                <button type="button" id="caesarRunBtn" class="btn" style="padding: 5px 12px; font-size: 0.85rem; cursor:pointer;">Process Text</button>
             </div>
             <div id="caesarOutput"></div>
         </section>
@@ -85,7 +83,7 @@
                 </div>
                 <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
                     <h4 style="color: #5b3286; margin-top: 0;">Key Space Size</h4>
-                    <p style="font-size: 0.9rem;"><strong>Caesar:</strong> $|\mathcal{K}| = 25$ (trivial to brute-force).<br><strong>Toy ECC:</strong> Small field $p=17$, but real secp256k1 has $|\mathcal{K}| \approx 2^{256}$.</p>
+                    <p style="font-size: 0.9rem;"><strong>Caesar:</strong> $\vert{}\mathcal{K}\vert{} = 25$ (trivial to brute-force).<br><strong>Toy ECC:</strong> Small field $p=17$, but real secp256k1 has $\vert{}\mathcal{K}\vert{} \approx 2^{256}$.</p>
                 </div>
                 <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
                     <h4 style="color: #5b3286; margin-top: 0;">Statistical Properties</h4>
@@ -105,7 +103,7 @@
             <div class="control-group" style="margin: 15px 0; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
                 <h4 style="margin-top:0;">Automatic Key Recovery Attack</h4>
                 <textarea id="cipherInput" style="width: 100%; height: 60px; padding: 6px; border-radius: 6px; border: 1px solid #ccc;">KHOOR ZRUOG WKLV LV D VWDWLVWLFV KRPHZRUN DERXW FUBSWRJUDSKB</textarea>
-                <button type="button" id="breakCaesarBtn" onclick="runBreakCaesar()" class="btn" style="margin-top: 8px; padding: 5px 12px; font-size: 0.85rem; cursor:pointer;">Crack Caesar Cipher</button>
+                <button type="button" id="breakCaesarBtn" class="btn" style="margin-top: 8px; padding: 5px 12px; font-size: 0.85rem; cursor:pointer;">Crack Caesar Cipher</button>
             </div>
             <div id="breakCaesarOutput"></div>
         </section>
@@ -125,7 +123,7 @@
                 <label for="targetY"> $Q_y$: </label>
                 <input type="number" id="targetY" value="7" style="width: 50px; padding: 4px;">
                 &nbsp;&nbsp;
-                <button type="button" id="attackEccBtn" onclick="runAttackEcc()" class="btn" style="padding: 5px 12px; font-size: 0.85rem; cursor:pointer;">Crack Private Key (ECDLP)</button>
+                <button type="button" id="attackEccBtn" class="btn" style="padding: 5px 12px; font-size: 0.85rem; cursor:pointer;">Crack Private Key (ECDLP)</button>
             </div>
             <div id="attackEccOutput"></div>
 
@@ -141,6 +139,160 @@
     <footer>
         <p>Statistics &amp; Cryptography MSc Portfolio | Hosted on GitHub Pages</p>
     </footer>
+
+    <!-- EMBEDDED JAVASCRIPT LOGIC -->
+    <script>
+        const P = 17;
+        const A = 0;
+        const G = { x: 1, y: 5 };
+
+        function modInverse(a, m) {
+            let m0 = m;
+            let y = 0, x = 1;
+            if (m === 1) return 0;
+            a = ((a % m) + m) % m;
+            while (a > 1) {
+                let q = Math.floor(a / m);
+                let t = m;
+                m = a % m;
+                a = t;
+                t = y;
+                y = x - q * y;
+                x = t;
+            }
+            if (x < 0) x += m0;
+            return x;
+        }
+
+        function pointAdd(P1, P2) {
+            if (P1 === null) return P2;
+            if (P2 === null) return P1;
+
+            let s;
+            if (P1.x === P2.x && P1.y === P2.y) {
+                let num = (3 * P1.x * P1.x + A) % P;
+                let den = (2 * P1.y) % P;
+                if (den === 0) return null;
+                s = (num * modInverse(den, P)) % P;
+            } else if (P1.x === P2.x) {
+                return null;
+            } else {
+                let num = (P2.y - P1.y) % P;
+                let den = (P2.x - P1.x) % P;
+                s = (num * modInverse(den, P)) % P;
+            }
+
+            let x3 = (s * s - P1.x - P2.x) % P;
+            x3 = ((x3 % P) + P) % P;
+
+            let y3 = (s * (P1.x - x3) - P1.y) % P;
+            y3 = ((y3 % P) + P) % P;
+
+            return { x: x3, y: y3 };
+        }
+
+        function multiplyPoint(k) {
+            if (k <= 0) return null;
+            let current = G;
+            for (let i = 1; i < k; i++) {
+                current = pointAdd(current, G);
+                if (current === null) break;
+            }
+            return current;
+        }
+
+        function scalarMultiply(k, Pt) {
+            if (k <= 0 || Pt === null) return null;
+            let current = Pt;
+            for (let i = 1; i < k; i++) {
+                current = pointAdd(current, Pt);
+                if (current === null) break;
+            }
+            return current;
+        }
+
+        function runEccDemo() {
+            const msgInput = document.getElementById("eccMessage");
+            const privInput = document.getElementById("eccPrivKey");
+            const out = document.getElementById("eccOutput");
+            if (!msgInput || !privInput || !out) return;
+
+            const msg = parseInt(msgInput.value);
+            const privKey = parseInt(privInput.value);
+
+            if (isNaN(msg) || isNaN(privKey) || msg < 1 || msg >= P || privKey < 1) {
+                out.innerHTML = "<p style='color:red;'>Please enter a valid message m ∈ [1, 16] and key k ≥ 1.</p>";
+                return;
+            }
+
+            let pubKey = multiplyPoint(privKey);
+            let r = 3;
+            let C1 = multiplyPoint(r);
+            let sharedPoint = scalarMultiply(r, pubKey);
+
+            let mask = (sharedPoint && sharedPoint.x !== 0) ? sharedPoint.x : 1;
+            let cipher = (msg * mask) % P;
+            let decrypted = (cipher * modInverse(mask, P)) % P;
+
+            out.innerHTML = `
+                <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc; margin-top: 10px;">
+                    <p style="margin: 4px 0;"><strong>Recipient Public Key Q<sub>B</sub>:</strong> ${pubKey ? `(${pubKey.x},${pubKey.y})` : 'O (Point at Infinity)'}</p>
+                    <p style="margin: 4px 0;"><strong>Ciphertext C<sub>1</sub> (rG):</strong> ${C1 ? `(${C1.x},${C1.y})` : 'O'}, <strong>C<sub>2</sub>:</strong> ${cipher}</p>
+                    <p style="margin: 4px 0;"><strong>Shared Secret Point (rQ<sub>B</sub>):</strong> ${sharedPoint ? `(${sharedPoint.x},${sharedPoint.y})` : 'O'} &rarr; Mask x-coord = ${mask}</p>
+                    <p style="margin: 4px 0; font-size: 1.05rem; color: #3f225f;"><strong>Decrypted Message:</strong> m = ${decrypted} (Original Message: ${msg})</p>
+                </div>
+            `;
+        }
+
+        function runCaesarDemo() {
+            const text = document.getElementById("caesarText").value.toUpperCase();
+            const shift = parseInt(document.getElementById("caesarShift").value);
+            const out = document.getElementById("caesarOutput");
+            if (!out) return;
+
+            let cipher = "";
+            for (let i = 0; i < text.length; i++) {
+                let code = text.charCodeAt(i);
+                if (code >= 65 && code <= 90) {
+                    cipher += String.fromCharCode(((code - 65 + shift) % 26) + 65);
+                } else {
+                    cipher += text[i];
+                }
+            }
+
+            out.innerHTML = `
+                <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc; margin-top: 10px;">
+                    <p style="margin: 4px 0;"><strong>Plaintext:</strong> ${text}</p>
+                    <p style="margin: 4px 0;"><strong>Ciphertext (Shift +${shift}):</strong> ${cipher}</p>
+                </div>
+            `;
+        }
+
+        function runBreakCaesar() {
+            const cipherText = document.getElementById("cipherInput").value.toUpperCase();
+            const out = document.getElementById("breakCaesarOutput");
+            if (!out) return;
+
+            const englishFreq = [8.17, 1.49, 2.78, 4.25, 12.70, 2.22, 2.01, 6.09, 6.97, 0.15, 0.77, 4.03, 2.41, 6.75, 7.51, 1.93, 0.09, 5.98, 6.32, 9.05, 2.75, 0.98, 2.36, 0.15, 1.97, 0.07];
+
+            let bestShift = 0;
+            let minChi2 = Infinity;
+
+            for (let s = 0; s < 26; s++) {
+                let counts = new Array(26).fill(0);
+                let total = 0;
+
+                for (let i = 0; i < cipherText.length; i++) {
+                    let code = cipherText.charCodeAt(i);
+                    if (code >= 65 && code <= 90) {
+                        let dec = (code - 65 - s + 26) % 26;
+                        counts[dec]++;
+                        total++;
+                    }
+                }
+
+                let chi2 = 0;
+                for (let j = 0; j
 
 </body>
 </html>
