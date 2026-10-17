@@ -3,23 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homework 1 - Public-Key Cryptography</title>
+    <title>Homework 1 - Public-Key Cryptography & Ethereum Wallet Pipeline</title>
     <link rel="stylesheet" href="style.css">
     
-    <!-- Script JavaScript principale caricato con defer per non bloccare la pagina -->
     <script src="script.js" defer></script>
 
-    <!-- MathJax configurato in modo sicuro -->
     <script>
         window.MathJax = {
             tex: {
                 inlineMath: [['$', '$'], ['\\(', '\\)']],
                 displayMath: [['$$', '$$'], ['\\[', '\\]']]
-            },
-            startup: {
-                pageReady: () => {
-                    return MathJax.startup.defaultPageReady();
-                }
             }
         };
     </script>
@@ -29,22 +22,22 @@
 
     <header>
         <h1>Homework 1</h1>
-        <p>Public-Key Cryptography: Private Key to Public Key on a Toy Elliptic Curve</p>
+        <p>Public-Key Cryptography: From Elliptic Curve Toy Model to Ethereum Wallet Pipeline</p>
         <nav>
             <a href="index.html">&larr; Back to Home</a>
         </nav>
     </header>
 
     <main>
-        <!-- Section 1: Theory & Context -->
+        <!-- PART 1: TOY CURVE MODEL -->
         <section class="hw-card">
-            <h2>1. Theoretical Background</h2>
+            <h2>Part I: Elliptic Curve Scalar Multiplication (Toy Model)</h2>
             <p>
                 In Ethereum and Bitcoin, public keys are derived from private keys via scalar multiplication on the <strong>secp256k1</strong> curve ($y^2 = x^3 + 7 \pmod p$). 
                 Because the discrete logarithm problem on elliptic curves (ECDLP) is computationally intractable, calculating $Q = kG$ from $k$ is fast, but recovering $k$ from $Q$ is virtually impossible.
             </p>
             <p>
-                In this assignment, we demonstrate this principle using a simplified <strong>toy curve</strong> over the finite field $\mathbb{F}_{17}$:
+                We demonstrate this one-way function principle using a simplified <strong>toy curve</strong> over the finite field $\mathbb{F}_{17}$:
             </p>
             <div class="formula-box">
                 $$y^2 \equiv x^3 + 7 \pmod{17}$$
@@ -52,18 +45,17 @@
             <ul>
                 <li><strong>Base Point ($G$):</strong> $(1, 5)$</li>
                 <li><strong>Private Key ($k$):</strong> $6$</li>
-                <li><strong>Public Key ($Q$):</strong> $Q = kG = 6G$</li>
+                <li><strong>Toy Public Key ($Q$):</strong> $Q = kG = 6G$</li>
             </ul>
         </section>
 
         <!-- Section 2: Mathematical Operations -->
         <section class="hw-card">
             <h2>2. Elliptic Curve Arithmetic over $\mathbb{F}_p$</h2>
-            <p>To add points $P = (x_1, y_1)$ and $R = (x_2, y_2)$ on $y^2 = x^3 + a x + b \pmod p$:</p>
+            <p>To find the next point when adding $P = (x_1, y_1)$ and $R = (x_2, y_2)$ on $y^2 = x^3 + a x + b \pmod p$:</p>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 15px;">
                 
-                <!-- Point Addition Card -->
                 <div style="background-color: #fcfaff; border: 1.5px solid #e5d8f2; border-radius: 12px; padding: 15px;">
                     <h4 style="color: #5b3286; margin-top: 0; text-align: center;">POINT ADDITION ($P \neq R$)</h4>
                     <p style="text-align: center; font-size: 1.15rem; margin: 10px 0;">
@@ -72,7 +64,6 @@
                     <p style="font-size: 0.85rem; color: #78688b; text-align: center; margin: 0;">Used when adding two different points</p>
                 </div>
 
-                <!-- Point Doubling Card -->
                 <div style="background-color: #fcfaff; border: 1.5px solid #e5d8f2; border-radius: 12px; padding: 15px;">
                     <h4 style="color: #5b3286; margin-top: 0; text-align: center;">POINT DOUBLING ($P = R$)</h4>
                     <p style="text-align: center; font-size: 1.15rem; margin: 10px 0;">
@@ -83,7 +74,6 @@
 
             </div>
 
-            <!-- Next Point Card -->
             <div style="background-color: #fcfaff; border: 1.5px solid #e5d8f2; border-radius: 12px; padding: 18px; margin-top: 20px;">
                 <h4 style="color: #5b3286; margin-top: 0; text-align: center;">NEXT POINT $(x_3, y_3)$</h4>
                 <div style="text-align: center; font-size: 1.15rem; margin: 12px 0;">
@@ -91,7 +81,7 @@
                     $$y_3 \equiv s(x_1 - x_3) - y_1 \pmod p$$
                 </div>
                 <p style="font-size: 0.85rem; color: #78688b; text-align: center; margin: 0;">
-                    These coordinate formulas apply to both cases once the slope $s$ is found. Note that $p = 17$ and $a = 0$ for our curve.
+                    These formulas apply once the slope $s$ is found. Note that $p = 17$ and $a = 0$ for our curve.
                 </p>
             </div>
         </section>
@@ -107,16 +97,14 @@
                 <button type="button" id="calcBtn" class="btn" style="padding: 6px 14px; font-size: 0.9rem; cursor: pointer;">Compute Public Key</button>
             </div>
 
-            <div id="outputBox" style="margin-top: 20px;">
-                <!-- JS output table -->
-            </div>
+            <div id="outputBox" style="margin-top: 20px;"></div>
         </section>
 
         <!-- Section 4: Statistical Exploration -->
         <section class="hw-card">
-            <h2>4. Statistical Exploration & Cryptographic Properties</h2>
+            <h2>4. Statistical Exploration of Points</h2>
             <p>
-                By varying the private key $k \in [1, 16]$ on $y^2 \equiv x^3 + 7 \pmod{17}$, we observe the distribution of coordinates $(x, y)$ and their bit patterns:
+                Varying private key $k \in [1, 18]$ on $y^2 \equiv x^3 + 7 \pmod{17}$ shows coordinate distributions and bit patterns:
             </p>
 
             <div style="text-align: center; margin: 15px 0;">
@@ -124,31 +112,69 @@
             </div>
 
             <div id="statsOutput" style="margin-top: 15px;"></div>
+        </section>
 
-            <h3 style="margin-top: 25px;">Cryptographic Discussion</h3>
+
+        <!-- PART 2: ETHEREUM WALLET PIPELINE -->
+        <section class="hw-card">
+            <h2>Part II: Ethereum Wallet Cryptographic Pipeline</h2>
+            <p>Practical wallets (e.g., MetaMask, Rabby, Exodus) derive addresses via a multi-stage pipeline combining derivation, asymmetric cryptography, hashing, and checksums:</p>
             
-            <div style="background-color: #fcfaff; border-left: 4px solid #7b42bc; padding: 15px; border-radius: 6px; margin-top: 10px;">
-                <p><strong>1. Uniformity & Frequency of Coordinates:</strong></p>
-                <p>
-                    On a finite field $\mathbb{F}_p$, scalar multiplication produces discrete points that appear pseudo-randomly distributed over the curve's valid subgroup. However, not all $(x, y)$ values in $[0, p-1]$ exist because $x^3 + 7 \pmod p$ must be a quadratic residue for $y$ to exist.
-                </p>
+            <div style="background-color: #fcfaff; border-left: 4px solid #7b42bc; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.95rem; margin: 15px 0;">
+                Mnemonic Words &rarr; <strong>[BIP-39]</strong> &rarr; Seed (512 bits) <br>
+                &rarr; <strong>[BIP-32 / BIP-44]</strong> &rarr; Private Key ($k$) <br>
+                &rarr; <strong>[secp256k1]</strong> &rarr; Public Key ($Q = kG$) <br>
+                &rarr; <strong>[Keccak-256]</strong> &rarr; Raw Address (Last 20 Bytes) <br>
+                &rarr; <strong>[EIP-55]</strong> &rarr; <strong>Checksummed Address</strong>
+            </div>
 
-                <p><strong>2. Avalanche Effect & Input/Output Correlation:</strong></p>
-                <p>
-                    Unlike cryptographic hash functions (e.g., SHA-256), elliptic curve scalar multiplication $Q = kG$ preserves an underlying algebraic group structure:
-                    $$ (k_1 + k_2)G = k_1 G + k_2 G $$
-                    This homomorphism means $Q$ does <em>not</em> exhibit a true random avalanche effect. Small changes in $k$ do not randomly scatter bits; instead, they follow deterministic group addition rules.
-                </p>
+            <h3>Roles of Key Standards &amp; Cryptographic Primitives</h3>
+            <ul>
+                <li><strong>BIP-39:</strong> Converts entropy into a readable 12/24-word mnemonic phrase and derives a binary seed using PBKDF2.</li>
+                <li><strong>BIP-32 / BIP-44:</strong> Hierarchical Deterministic (HD) key derivation tree. Ethereum standard path: <code>m / 44' / 60' / 0' / 0 / index</code>.</li>
+                <li><strong>secp256k1:</strong> Elliptic curve used for deriving public key $Q = kG$ and signing transactions.</li>
+                <li><strong>Keccak-256:</strong> Cryptographic hash function used to hash the uncompressed public key (64 bytes). The address takes the last 20 bytes.</li>
+                <li><strong>EIP-55:</strong> Encodes mixed-case checksum formatting based on the Keccak-256 hash of the address string to prevent typing errors.</li>
+            </ul>
+        </section>
 
-                <p><strong>3. One-Way Function vs. Hash Function:</strong></p>
-                <ul>
-                    <li>
-                        <strong>Elliptic Curve ($k \to kG$):</strong> Acts as a <i>trapdoor one-way function</i> based on ECDLP. It maps a scalar to a point on a specific group structure, making it ideal for <strong>asymmetric key generation and digital signatures</strong>.
-                    </li>
-                    <li>
-                        <strong>Cryptographic Hash Function:</strong> Designed for <i>pre-image resistance, second pre-image resistance, and collision resistance</i> with maximum bit diffusion and strict avalanche behaviour, mapping arbitrary inputs to fixed-size bitstrings without preserving algebraic structure.
-                    </li>
-                </ul>
+        <!-- Section 6: Fundamental Concept Distinctions -->
+        <section class="hw-card">
+            <h2>5. Conceptual Distinctions &amp; Timeline Context</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                    <h4 style="color: #5b3286; margin-top: 0;">Key Derivation vs Generation</h4>
+                    <p style="font-size: 0.9rem;"><strong>Generation</strong> relies on true random entropy. <strong>Derivation</strong> deterministically computes child keys from a master secret via pseudo-random functions.</p>
+                </div>
+                <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                    <h4 style="color: #5b3286; margin-top: 0;">Public-Key Cryptography</h4>
+                    <p style="font-size: 0.9rem;">Asymmetric math (secp256k1) enabling digital signatures: private keys sign transactions, public keys verify them without revealing secrets.</p>
+                </div>
+                <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                    <h4 style="color: #5b3286; margin-top: 0;">Hashing vs Checksum</h4>
+                    <p style="font-size: 0.9rem;"><strong>Hashing</strong> (Keccak-256) is a one-way transformation mapping data to fixed bitstrings. <strong>Checksums</strong> (EIP-55) append redundancy to detect input errors.</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 25px;">Chronological Context &amp; Hash Differences</h3>
+            <ol style="line-height: 1.8;">
+                <li><strong>RSA (1977):</strong> First widely used asymmetric cryptosystem based on integer factorization.</li>
+                <li><strong>SHA-2 / SHA-512 (2001):</strong> NIST standard hash functions built on Merkle–Damgård structure.</li>
+                <li><strong>BIP-32 (2012):</strong> Introduced Bitcoin HD wallets to manage tree-structured key hierarchies.</li>
+                <li><strong>BIP-39 (2013):</strong> Standardized human-readable mnemonic recovery phrases.</li>
+                <li><strong>BIP-44 (2014):</strong> Multi-account HD wallet path conventions for multiple cryptocurrencies.</li>
+                <li><strong>SHA-3 (2015):</strong> NIST standard based on the Keccak sponge construction.</li>
+                <li><strong>EIP-55 (2016):</strong> Ethereum proposal for mixed-case checksum address formatting.</li>
+            </ol>
+
+            <div style="background-color: #fcfaff; border: 1px solid #e5d8f2; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                <h4 style="color: #5b3286; margin-top: 0;">SHA-2 vs Keccak-256 vs SHA3-256</h4>
+                <p style="font-size: 0.9rem;">
+                    SHA-2 uses Merkle–Damgård construction; Keccak uses a <strong>sponge construction</strong>. 
+                    Ethereum adopted <strong>Keccak-256 prior to official NIST SHA-3 standardization</strong>. 
+                    Official SHA3-256 uses a different domain separation padding (<code>0x06</code>) compared to Ethereum's original Keccak-256 (<code>0x01</code>), yielding different hash values for identical inputs.
+                </p>
             </div>
         </section>
     </main>
@@ -159,7 +185,6 @@
 
 </body>
 </html>
-    </footer>
 
     <script src="script.js"></script>
 </body>
