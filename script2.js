@@ -34,7 +34,7 @@ function pointAdd(P1, P2) {
         if (den === 0) return null;
         s = (num * modInverse(den, P)) % P;
     } else if (P1.x === P2.x) {
-        return null;
+        return null; // Point at Infinity
     } else {
         let num = (P2.y - P1.y) % P;
         let den = (P2.x - P1.x) % P;
@@ -50,49 +50,63 @@ function pointAdd(P1, P2) {
     return { x: x3, y: y3 };
 }
 
-function computeSequence(k) {
-    let steps = [];
+// Multiplies scalar k with generator G safely
+function multiplyPoint(k) {
+    if (k <= 0) return null;
     let current = G;
-    steps.push({ step: 1, point: G });
-
-    for (let i = 2; i <= k; i++) {
-        if (current === null) {
-            steps.push({ step: i, point: null });
-            current = G;
-            continue;
-        }
-        let next = pointAdd(current, G);
-        current = next;
-        steps.push({ step: i, point: current });
+    for (let i = 1; i < k; i++) {
+        current = pointAdd(current, G);
+        if (current === null) break;
     }
-    return steps;
+    return current;
+}
+
+// Multiplies scalar k with any point Pt
+function scalarMultiply(k, Pt) {
+    if (k <= 0 || Pt === null) return null;
+    let current = Pt;
+    for (let i = 1; i < k; i++) {
+        current = pointAdd(current, Pt);
+        if (current === null) break;
+    }
+    return current;
 }
 
 // ==========================================
 // HOMEWORK 2 INTERACTIVE FUNCTIONS
 // ==========================================
 function runEccDemo() {
-    const msg = parseInt(document.getElementById("eccMessage").value);
-    const privKey = parseInt(document.getElementById("eccPrivKey").value);
+    const msgInput = document.getElementById("eccMessage");
+    const privInput = document.getElementById("eccPrivKey");
     const out = document.getElementById("eccOutput");
-    if (!out) return;
+    if (!msgInput || !privInput || !out) return;
 
-    let seq = computeSequence(privKey);
-    let pubKey = seq[seq.length - 1].point;
+    const msg = parseInt(msgInput.value);
+    const privKey = parseInt(privInput.value);
 
+    if (isNaN(msg) || isNaN(privKey) || msg < 1 || msg >= P || privKey < 1) {
+        out.innerHTML = "<p style='color:red;'>Please enter a valid message m ∈ [1, 16] and key k ≥ 1.</p>";
+        return;
+    }
+
+    // Recipient Public Key Q_B = k_B * G
+    let pubKey = multiplyPoint(privKey);
+
+    // Ephemeral Key r = 3
     let r = 3;
-    let rG = computeSequence(r)[r - 1].point;
-    let rQ = computeSequence((r * privKey) % 18)[((r * privKey) % 18) - 1].point;
+    let C1 = multiplyPoint(r); // C1 = r * G
+    let sharedPoint = scalarMultiply(r, pubKey); // Shared secret = r * Q_B
 
-    let mask = rQ ? rQ.x : 1;
+    let mask = (sharedPoint && sharedPoint.x !== 0) ? sharedPoint.x : 1;
     let cipher = (msg * mask) % P;
     let decrypted = (cipher * modInverse(mask, P)) % P;
 
     out.innerHTML = `
         <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc;">
-            <p><strong>Public Key Q_B:</strong> ${pubKey ? `(${pubKey.x},${pubKey.y})` : 'Infinity'}</p>
-            <p><strong>Ciphertext:</strong> C1 = (${rG.x}, ${rG.y}), C2 = ${cipher}</p>
-            <p><strong>Decrypted Message:</strong> m = ${decrypted} (Original: ${msg})</p>
+            <p style="margin: 4px 0;"><strong>Recipient Public Key Q<sub>B</sub>:</strong> ${pubKey ? `(${pubKey.x},${pubKey.y})` : 'O (Point at Infinity)'}</p>
+            <p style="margin: 4px 0;"><strong>Ciphertext C<sub>1</sub> (rG):</strong> ${C1 ? `(${C1.x},${C1.y})` : 'O'}, <strong>C<sub>2</sub>:</strong> ${cipher}</p>
+            <p style="margin: 4px 0;"><strong>Shared Secret Point (rQ<sub>B</sub>):</strong> ${sharedPoint ? `(${sharedPoint.x},${sharedPoint.y})` : 'O'} &rarr; Mask x-coord = ${mask}</p>
+            <p style="margin: 4px 0; font-size: 1.05rem; color: #3f225f;"><strong>Decrypted Message:</strong> m = ${decrypted} (Original Message: ${msg})</p>
         </div>
     `;
 }
@@ -115,8 +129,8 @@ function runCaesarDemo() {
 
     out.innerHTML = `
         <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc;">
-            <p><strong>Plaintext:</strong> ${text}</p>
-            <p><strong>Ciphertext (Shift +${shift}):</strong> ${cipher}</p>
+            <p style="margin: 4px 0;"><strong>Plaintext:</strong> ${text}</p>
+            <p style="margin: 4px 0;"><strong>Ciphertext (Shift +${shift}):</strong> ${cipher}</p>
         </div>
     `;
 }
@@ -170,8 +184,8 @@ function runBreakCaesar() {
 
     out.innerHTML = `
         <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc;">
-            <p><strong>Recovered Key Shift (K):</strong> ${bestShift} (Chi-square score: ${minChi2.toFixed(2)})</p>
-            <p><strong>Decrypted Plaintext:</strong> ${recoveredText}</p>
+            <p style="margin: 4px 0;"><strong>Recovered Shift Key (K):</strong> ${bestShift} (Chi-square score: ${minChi2.toFixed(2)})</p>
+            <p style="margin: 4px 0;"><strong>Decrypted Plaintext:</strong> ${recoveredText}</p>
         </div>
     `;
 }
@@ -183,22 +197,26 @@ function runAttackEcc() {
     if (!out) return;
 
     let foundK = null;
-    let steps = computeSequence(18);
 
-    for (let i = 0; i < steps.length; i++) {
-        if (steps[i].point && steps[i].point.x === targetX && steps[i].point.y === targetY) {
-            foundK = steps[i].step;
+    // Search through subgroup points (1 to 18)
+    for (let k = 1; k <= 18; k++) {
+        let pt = multiplyPoint(k);
+        if (pt && pt.x === targetX && pt.y === targetY) {
+            foundK = k;
             break;
         }
     }
 
     out.innerHTML = `
         <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc;">
-            ${foundK ? `<p style="color:green; font-weight:bold;">Private Key Recovered! k = ${foundK}</p><p>Exhaustive Search Operations:${foundK} curve additions.</p>` : `<p style="color:red;">Point not found on curve subgroup.</p>`}
+            ${foundK ? `<p style="color:green; font-weight:bold; margin: 4px 0;">Private Key Recovered! k = ${foundK}</p><p style="margin: 4px 0;">Exhaustive Search Cost: ${foundK} curve point additions.</p>` : `<p style="color:red; margin: 4px 0;">Point (${targetX},${targetY}) is not in the subgroup generated by G=(1,5).</p><p style="margin: 4px 0; font-size: 0.85rem; color: #555;">Valid subgroup points: (1,5), (2,10), (5,9), (12,1), (12,16), (5,8), (2,7), (1,12).</p>`}
         </div>
     `;
 }
 
+// ==========================================
+// INITIALIZATION
+// ==========================================
 function initApp2() {
     const eccBtn = document.getElementById("eccEncryptBtn");
     if (eccBtn) eccBtn.addEventListener("click", runEccDemo);
