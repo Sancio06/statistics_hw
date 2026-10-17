@@ -6,7 +6,7 @@
     <title>Homework 2 - Encryption Schemes & Cryptanalysis</title>
     <link rel="stylesheet" href="style.css">
     
-    <script src="script2.js" defer></script>
+    <script src="script2.js?v=2" defer></script>
 
     <script>
         window.MathJax = {
@@ -37,17 +37,19 @@
             </p>
             <ul>
                 <li><strong>Recipient Keypair:</strong> Private key $k_B$, Public key $Q_B = k_B G$.</li>
-                <li><strong>Encryption:</strong> To encrypt a scalar $m \in [1, 16]$, Alice picks ephemeral key $r$. She outputs $C_1 = r G$ and $C_2 = m \cdot (r Q_B)_x \pmod{17}$.</li>
+                <li><strong>Encryption:</strong> To encrypt a scalar $m \in [1, 16]$, Alice picks ephemeral key $r=3$. She outputs $C_1 = r G$ and $C_2 = m \cdot (r Q_B)_x \pmod{17}$.</li>
                 <li><strong>Decryption:</strong> Bob recovers shared secret $S = k_B C_1 = r Q_B$ and computes $m \equiv C_2 \cdot (S_x)^{-1} \pmod{17}$.</li>
             </ul>
 
             <div class="control-group" style="margin: 15px 0; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
-                <h4>Interactive Toy ECC Encryption Demo</h4>
+                <h4 style="margin-top:0;">Interactive Toy ECC Encryption Demo</h4>
                 <label for="eccMessage">Message scalar $m \in [1, 16]$: </label>
                 <input type="number" id="eccMessage" value="7" min="1" max="16" style="width: 50px; padding: 4px;">
+                &nbsp;&nbsp;
                 <label for="eccPrivKey">Recipient Private Key $k_B$: </label>
-                <input type="number" id="eccPrivKey" value="6" min="1" max="18" style="width: 50px; padding: 4px;">
-                <button type="button" id="eccEncryptBtn" class="btn" style="padding: 5px 12px; font-size: 0.85rem;">Encrypt / Decrypt</button>
+                <input type="number" id="eccPrivKey" value="6" min="1" max="8" style="width: 50px; padding: 4px;">
+                &nbsp;&nbsp;
+                <button type="button" id="eccEncryptBtn" onclick="runEccDemo()" class="btn" style="padding: 5px 12px; font-size: 0.85rem; cursor:pointer;">Encrypt / Decrypt</button>
             </div>
             <div id="eccOutput"></div>
         </section>
@@ -61,12 +63,14 @@
             </p>
 
             <div class="control-group" style="margin: 15px 0; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
-                <h4>Interactive Caesar Cipher Demo</h4>
+                <h4 style="margin-top:0;">Interactive Caesar Cipher Demo</h4>
                 <label for="caesarText">Text: </label>
                 <input type="text" id="caesarText" value="STATISTICS" style="padding: 4px; width: 180px;">
+                &nbsp;&nbsp;
                 <label for="caesarShift">Shift Key $K$: </label>
                 <input type="number" id="caesarShift" value="3" min="1" max="25" style="width: 50px; padding: 4px;">
-                <button type="button" id="caesarRunBtn" class="btn" style="padding: 5px 12px; font-size: 0.85rem;">Process Text</button>
+                &nbsp;&nbsp;
+                <button type="button" id="caesarRunBtn" onclick="runCaesarDemo()" class="btn" style="padding: 5px 12px; font-size: 0.85rem; cursor:pointer;">Process Text</button>
             </div>
             <div id="caesarOutput"></div>
         </section>
@@ -99,9 +103,9 @@
             </p>
 
             <div class="control-group" style="margin: 15px 0; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
-                <h4>Automatic Key Recovery Attack</h4>
+                <h4 style="margin-top:0;">Automatic Key Recovery Attack</h4>
                 <textarea id="cipherInput" style="width: 100%; height: 60px; padding: 6px; border-radius: 6px; border: 1px solid #ccc;">KHOOR ZRUOG WKLV LV D VWDWLVWLFV KRPHZRUN DERXW FUBSWRJUDSKB</textarea>
-                <button type="button" id="breakCaesarBtn" class="btn" style="margin-top: 8px; padding: 5px 12px; font-size: 0.85rem;">Crack Caesar Cipher</button>
+                <button type="button" id="breakCaesarBtn" onclick="runBreakCaesar()" class="btn" style="margin-top: 8px; padding: 5px 12px; font-size: 0.85rem; cursor:pointer;">Crack Caesar Cipher</button>
             </div>
             <div id="breakCaesarOutput"></div>
         </section>
@@ -110,16 +114,18 @@
         <section class="hw-card">
             <h2>5. Restricted Key Space Attack on Toy ECC vs Real ECC</h2>
             <p>
-                The restricted key space ($k_B \in [1, 18]$) allows recovering private keys instantaneously via exhaustive search over valid subgroup points.
+                The restricted key space ($k_B \in [1, 8]$) allows recovering private keys instantaneously via exhaustive search over valid subgroup points.
             </p>
 
             <div class="control-group" style="margin: 15px 0; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
-                <h4>ECDLP Key Recovery Attack Demo</h4>
+                <h4 style="margin-top:0;">ECDLP Key Recovery Attack Demo</h4>
                 <label for="targetX">Target Public Key $Q_x$: </label>
                 <input type="number" id="targetX" value="2" style="width: 50px; padding: 4px;">
+                &nbsp;&nbsp;
                 <label for="targetY"> $Q_y$: </label>
                 <input type="number" id="targetY" value="7" style="width: 50px; padding: 4px;">
-                <button type="button" id="attackEccBtn" class="btn" style="padding: 5px 12px; font-size: 0.85rem;">Crack Private Key (ECDLP)</button>
+                &nbsp;&nbsp;
+                <button type="button" id="attackEccBtn" onclick="runAttackEcc()" class="btn" style="padding: 5px 12px; font-size: 0.85rem; cursor:pointer;">Crack Private Key (ECDLP)</button>
             </div>
             <div id="attackEccOutput"></div>
 
