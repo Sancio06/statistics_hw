@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homework 2 - Wallet Pipeline & Standards</title>
+    <title>Homework 2 - Encryption Schemes & Cryptanalysis</title>
     <link rel="stylesheet" href="style.css">
     
-    <script src="script.js" defer></script>
+    <script src="script2.js" defer></script>
 
     <script>
         window.MathJax = {
@@ -22,100 +22,113 @@
 
     <header>
         <h1>Homework 2</h1>
-        <p>Ethereum Wallet Pipeline: Key Derivation, Standards & Cryptographic Primitives</p>
+        <p>Asymmetric vs Classical Encryption: Toy ECC, Caesar Cipher &amp; Cryptanalysis</p>
         <nav>
             <a href="index.html">&larr; Back to Home</a>
         </nav>
     </header>
 
     <main>
-        <!-- Section 1: The Cryptographic Pipeline -->
+        <!-- PART 1: TOY ECC ENCRYPTION -->
         <section class="hw-card">
-            <h2>1. Ethereum Wallet Cryptographic Pipeline</h2>
-            <p>Modern crypto wallets (e.g., MetaMask, Rabby, Exodus) construct deterministic addresses through a multi-stage pipeline:</p>
-            
-            <div style="background-color: #fcfaff; border-left: 4px solid #7b42bc; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.95rem; margin: 15px 0;">
-                Mnemonic Words &rarr; <strong>[BIP-39]</strong> &rarr; Seed (512 bits) <br>
-                &rarr; <strong>[BIP-32 / BIP-44]</strong> &rarr; Private Key ($k$) <br>
-                &rarr; <strong>[secp256k1]</strong> &rarr; Public Key ($Q = kG$) <br>
-                &rarr; <strong>[Keccak-256]</strong> &rarr; Raw Address (Last 20 Bytes) <br>
-                &rarr; <strong>[EIP-55]</strong> &rarr; <strong>Checksummed Address</strong>
-            </div>
-
-            <h3>Roles of Key Standards &amp; Primitives</h3>
+            <h2>1. Toy ECC Encryption &amp; Decryption Scheme</h2>
+            <p>
+                Using our toy curve $y^2 = x^3 + 7 \pmod{17}$ with $G = (1, 5)$, we implement an ECIES-style point-masking scheme:
+            </p>
             <ul>
-                <li><strong>BIP-39:</strong> Converts entropy (128–256 bits) into a readable 12/24-word mnemonic phrase and derives a binary seed using PBKDF2 with HMAC-SHA512.</li>
-                <li><strong>BIP-32:</strong> Defines Hierarchical Deterministic (HD) wallet tree creation from a single seed using master keys and chain codes.</li>
-                <li><strong>BIP-44:</strong> Standardizes derivation paths. For Ethereum: <code>m / 44' / 60' / 0' / 0 / index</code>.</li>
-                <li><strong>secp256k1:</strong> Elliptic curve used to compute the public key $Q = kG$ from private key $k$.</li>
-                <li><strong>Keccak-256:</strong> Cryptographic hash function used to hash the uncompressed public key (64 bytes). The address is formed by taking the last 20 bytes.</li>
-                <li><strong>EIP-55:</strong> Encodes mixed-case letters based on the Keccak-256 hash of the address string to detect typing errors.</li>
+                <li><strong>Recipient Keypair:</strong> Private key $k_B$, Public key $Q_B = k_B G$.</li>
+                <li><strong>Encryption:</strong> To encrypt a scalar $m \in [1, 16]$, Alice picks ephemeral key $r$. She outputs $C_1 = r G$ and $C_2 = m \cdot (r Q_B)_x \pmod{17}$.</li>
+                <li><strong>Decryption:</strong> Bob recovers shared secret $S = k_B C_1 = r Q_B$ and computes $m \equiv C_2 \cdot (S_x)^{-1} \pmod{17}$.</li>
             </ul>
+
+            <div class="control-group" style="margin: 15px 0; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                <h4>Interactive Toy ECC Encryption Demo</h4>
+                <label for="eccMessage">Message scalar $m \in [1, 16]$: </label>
+                <input type="number" id="eccMessage" value="7" min="1" max="16" style="width: 50px; padding: 4px;">
+                <label for="eccPrivKey">Recipient Private Key $k_B$: </label>
+                <input type="number" id="eccPrivKey" value="6" min="1" max="18" style="width: 50px; padding: 4px;">
+                <button type="button" id="eccEncryptBtn" class="btn" style="padding: 5px 12px; font-size: 0.85rem;">Encrypt / Decrypt</button>
+            </div>
+            <div id="eccOutput"></div>
         </section>
 
-        <!-- Section 2: Distinction of Concepts -->
+        <!-- PART 2: CAESAR CIPHER -->
         <section class="hw-card">
-            <h2>2. Distinction of Fundamental Concepts</h2>
+            <h2>2. The Caesar Cipher</h2>
+            <p>
+                The classical Caesar cipher is a symmetric substitution cipher where each letter in plaintext is shifted by key $K \in [0, 25]$:
+                $$E(p) = (p + K) \bmod 26, \quad D(c) = (c - K) \bmod 26$$
+            </p>
+
+            <div class="control-group" style="margin: 15px 0; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                <h4>Interactive Caesar Cipher Demo</h4>
+                <label for="caesarText">Text: </label>
+                <input type="text" id="caesarText" value="STATISTICS" style="padding: 4px; width: 180px;">
+                <label for="caesarShift">Shift Key $K$: </label>
+                <input type="number" id="caesarShift" value="3" min="1" max="25" style="width: 50px; padding: 4px;">
+                <button type="button" id="caesarRunBtn" class="btn" style="padding: 5px 12px; font-size: 0.85rem;">Process Text</button>
+            </div>
+            <div id="caesarOutput"></div>
+        </section>
+
+        <!-- PART 3: COMPARISON -->
+        <section class="hw-card">
+            <h2>3. Comparative Analysis: Toy ECC vs. Caesar Cipher</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
                 <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
-                    <h4 style="color: #5b3286; margin-top: 0;">Key Derivation vs. Generation</h4>
-                    <p style="font-size: 0.9rem;"><strong>Generation</strong> relies on true random entropy. <strong>Derivation</strong> deterministically computes child keys from a master secret via pseudo-random functions.</p>
+                    <h4 style="color: #5b3286; margin-top: 0;">Encryption &amp; Keys</h4>
+                    <p style="font-size: 0.9rem;"><strong>Caesar:</strong> Symmetric (shared secret key).<br><strong>Toy ECC:</strong> Asymmetric (public key encrypts, private key decrypts).</p>
                 </div>
                 <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
-                    <h4 style="color: #5b3286; margin-top: 0;">Public-Key Cryptography</h4>
-                    <p style="font-size: 0.9rem;">Asymmetric math (secp256k1) enabling digital signatures: private keys sign transactions, public keys verify them without revealing the secret.</p>
+                    <h4 style="color: #5b3286; margin-top: 0;">Key Space Size</h4>
+                    <p style="font-size: 0.9rem;"><strong>Caesar:</strong> $|\mathcal{K}| = 25$ (trivial to brute-force).<br><strong>Toy ECC:</strong> Small field $p=17$, but real secp256k1 has $|\mathcal{K}| \approx 2^{256}$.</p>
                 </div>
                 <div style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
-                    <h4 style="color: #5b3286; margin-top: 0;">Hashing vs. Checksum</h4>
-                    <p style="font-size: 0.9rem;"><strong>Hashing</strong> (Keccak-256) is a one-way transformation mapping data to fixed bitstrings. <strong>Checksums</strong> (EIP-55) append redundancy to detect user input errors.</p>
+                    <h4 style="color: #5b3286; margin-top: 0;">Statistical Properties</h4>
+                    <p style="font-size: 0.9rem;"><strong>Caesar:</strong> Preserves language letter frequency.<br><strong>ECC:</strong> Ephemeral random mask $r$ hides frequency patterns.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Section 3: Historical & Temporal Context -->
+        <!-- PART 4: STATISTICAL CRYPTANALYSIS OF CAESAR -->
         <section class="hw-card">
-            <h2>3. Timeline &amp; Cryptographic Evolution</h2>
-            <p>Chronological progression of key standards and primitives:</p>
-            
-            <ol style="line-height: 1.8;">
-                <li><strong>RSA (1977):</strong> First widely used public-key asymmetric cryptosystem based on integer factorization.</li>
-                <li><strong>SHA-2 / SHA-512 (2001):</strong> NIST standardized hash functions built on the Merkle–Damgård structure.</li>
-                <li><strong>BIP-32 (2012):</strong> Introduced Bitcoin HD wallets to manage tree-structured key hierarchies.</li>
-                <li><strong>BIP-39 (2013):</strong> Standardized human-readable mnemonic recovery phrases.</li>
-                <li><strong>BIP-44 (2014):</strong> Multi-account HD wallet path conventions for multiple cryptocurrencies.</li>
-                <li><strong>SHA-3 (2015):</strong> NIST standard based on the Keccak sponge construction.</li>
-                <li><strong>EIP-55 (2016):</strong> Ethereum proposal for mixed-case checksum address formatting.</li>
-            </ol>
-
-            <div style="background-color: #fcfaff; border: 1px solid #e5d8f2; padding: 15px; border-radius: 8px; margin-top: 15px;">
-                <h4 style="color: #5b3286; margin-top: 0;">SHA-2/512 vs. Keccak-256 vs. NIST SHA-3</h4>
-                <p style="font-size: 0.9rem;">
-                    SHA-2 uses a Merkle–Damgård construction, whereas Keccak uses a <strong>sponge construction</strong>. 
-                    Although NIST standardized SHA-3 based on Keccak, Ethereum adopted <strong>Keccak-256 prior to official standardization</strong>. 
-                    Official SHA3-256 uses different domain separation padding (<code>0x06</code>) compared to Ethereum's original Keccak-256 (<code>0x01</code>), making their output hashes completely different for identical inputs.
-                </p>
-            </div>
-        </section>
-
-        <!-- Section 4: System Specialization & Statistics -->
-        <section class="hw-card">
-            <h2>4. Specialized Roles &amp; Statistical Properties</h2>
-            <h3>Why Not a Single Algorithm?</h3>
+            <h2>4. Statistical Cryptanalysis of the Caesar Cipher</h2>
             <p>
-                No single algorithm fulfills all wallet requirements. A secure system separates tasks across specialized primitives:
+                We recover the shift key by comparing ciphertext frequencies with standard English letter distribution using Chi-Square ($\chi^2$) goodness-of-fit:
+                $$\chi^2(k) = \sum_{i=0}^{25} \frac{(f_i - e_i)^2}{e_i}$$
             </p>
-            <ul>
-                <li><strong>BIP-39/32/44:</strong> Solves <i>usability and key management</i> (backing up hundreds of addresses with 12 words).</li>
-                <li><strong>secp256k1:</strong> Solves <i>authentication and ownership</i> through mathematical asymmetry and signature generation.</li>
-                <li><strong>Keccak-256:</strong> Solves <i>pseudonymity and address length reduction</i> (shrinking 64-byte public keys to 20-byte addresses).</li>
-                <li><strong>EIP-55:</strong> Solves <i>human error prevention</i> without changing underlying protocol-level transactions.</li>
-            </ul>
 
-            <h3>Statistical Properties</h3>
-            <p style="font-size: 0.95rem;">
-                Keccak-256 exhibits strict <strong>avalanche behavior</strong> (changing 1 input bit changes ~50% of output bits) and uniform bit distribution. 
-                In contrast, secp256k1 public keys ($Q = kG$) preserve algebraic group structure. Truncating the Keccak-256 hash to 20 bytes provides $2^{160}$ address space security against collision/preimage attacks while offering ideal statistical uniformity.
+            <div class="control-group" style="margin: 15px 0; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                <h4>Automatic Key Recovery Attack</h4>
+                <textarea id="cipherInput" style="width: 100%; height: 60px; padding: 6px; border-radius: 6px; border: 1px solid #ccc;">KHOOR ZRUOG WKLV LV D VWDWLVWLFV KRPHZRUN DERXW FUBSWRJUDSKB</textarea>
+                <button type="button" id="breakCaesarBtn" class="btn" style="margin-top: 8px; padding: 5px 12px; font-size: 0.85rem;">Crack Caesar Cipher</button>
+            </div>
+            <div id="breakCaesarOutput"></div>
+        </section>
+
+        <!-- PART 5: RESTRICTED KEY SPACE ATTACK ON TOY ECC -->
+        <section class="hw-card">
+            <h2>5. Restricted Key Space Attack on Toy ECC vs Real ECC</h2>
+            <p>
+                The restricted key space ($k_B \in [1, 18]$) allows recovering private keys instantaneously via exhaustive search over valid subgroup points.
             </p>
+
+            <div class="control-group" style="margin: 15px 0; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                <h4>ECDLP Key Recovery Attack Demo</h4>
+                <label for="targetX">Target Public Key $Q_x$: </label>
+                <input type="number" id="targetX" value="13" style="width: 50px; padding: 4px;">
+                <label for="targetY"> $Q_y$: </label>
+                <input type="number" id="targetY" value="7" style="width: 50px; padding: 4px;">
+                <button type="button" id="attackEccBtn" class="btn" style="padding: 5px 12px; font-size: 0.85rem;">Crack Private Key (ECDLP)</button>
+            </div>
+            <div id="attackEccOutput"></div>
+
+            <h3 style="margin-top: 20px;">Discussion: Toy Scheme vs Real secp256k1</h3>
+            <ul>
+                <li><strong>Structural Attack Difference:</strong> Caesar cryptanalysis exploits <i>natural language redundancy</i>. ECC brute-force attacks exploit a <i>small numerical search space</i>.</li>
+                <li><strong>Scalability in Full ECC:</strong> Real secp256k1 key space is $2^{256} \approx 10^{77}$. Exhaustive search is computationally impossible.</li>
+                <li><strong>Toy Model Flaws:</strong> Small prime fields ($p=17$) are vulnerable to brute force and Pollard's rho algorithms. Real curves require large prime order subgroups.</li>
+            </ul>
         </section>
     </main>
 
