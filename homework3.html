@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homework 3 - Stochastic Security Processes, LLN & CLT</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- MathJax Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            background: #ffffff;
+            border: 1px solid #e5d8f2;
+            border-radius: 8px;
+            margin-top: 15px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Homework 3</h1>
+        <p>Stochastic Penetration Processes: LLN, Central Limit Theorem & Variance Scaling</p>
+        <nav>
+            <a href="index.html">&larr; Back to Home</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- SECTION 1: THEORETICAL MODELING -->
+        <section class="hw-card">
+            <h2>1. Stochastic Penetration Process Models</h2>
+            <p>
+                Consider $n$ sequential security systems (or steps) attacked by $m$ independent attackers. The penetration process is modeled as a sum of independent and identically distributed (i.i.d.) random variables $X_1, X_2, \dots, X_n$:
+            </p>
+            <ul>
+                <li><strong>Bernoulli Model ($X_i \in \{0, 1\}$):</strong> Represents binary outcome attacks (Failure = 0, Success = 1) with $P(X_i = 1) = p$. Expectation $\mathbb{E}[X_i] = p$ and variance $\text{Var}(X_i) = p(1-p)$.</li>
+                <li><strong>Rademacher Model ($X_i \in \{-1, +1\}$):</strong> Represents symmetric zero-mean random walks with $P(X_i = +1) = P(X_i = -1) = 0.5$. Expectation $\mathbb{E}[X_i] = 0$ and variance $\text{Var}(X_i) = 1$.</li>
+            </ul>
+
+            <h3>Three Trajectory Quantities</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div style="background: #fafafa; padding: 12px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                    <h4 style="color: #5b3286; margin-top: 0;">Total Score $S_n$</h4>
+                    <p style="font-size: 0.9rem;">$$S_n = \sum_{i=1}^n X_i$$ Variance grows linearly: $\text{Var}(S_n) = n \sigma^2$. Trajectories diverge as $n \to \infty$.</p>
+                </div>
+                <div style="background: #fafafa; padding: 12px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                    <h4 style="color: #5b3286; margin-top: 0;">Average Score $S_n / n$</h4>
+                    <p style="font-size: 0.9rem;">$$\frac{S_n}{n} = \frac{1}{n} \sum_{i=1}^n X_i$$ Variance shrinks: $\text{Var}\left(\frac{S_n}{n}\right) = \frac{\sigma^2}{n} \to 0$. Converges to $\mu$ by LLN.</p>
+                </div>
+                <div style="background: #fafafa; padding: 12px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                    <h4 style="color: #5b3286; margin-top: 0;">Normalized Score $S_n / \sqrt{n}$</h4>
+                    <p style="font-size: 0.9rem;">$$\frac{S_n}{\sqrt{n}} = \frac{1}{\sqrt{n}} \sum_{i=1}^n X_i$$ Variance remains constant: $\text{Var}\left(\frac{S_n}{\sqrt{n}}\right) = \sigma^2$. Converges to Normal distribution by CLT.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: INTERACTIVE SIMULATOR -->
+        <section class="hw-card">
+            <h2>2. Interactive Trajectory Simulation</h2>
+            <p>Select the stochastic distribution model, step size $n$, and number of attackers $m$ to simulate penetration score trajectories:</p>
+
+            <div class="control-group" style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2; display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+                <div>
+                    <label for="modelType"><strong>Model:</strong> </label>
+                    <select id="modelType" style="padding: 5px; border-radius: 6px; border: 1px solid #ccc;">
+                        <option value="rademacher">Rademacher {-1, +1}</option>
+                        <option value="bernoulli">Bernoulli {0, 1} (p=0.5)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="normType"><strong>Normalization:</strong> </label>
+                    <select id="normType" style="padding: 5px; border-radius: 6px; border: 1px solid #ccc;">
+                        <option value="total">Total Score (Sn)</option>
+                        <option value="average">Average Score (Sn / n)</option>
+                        <option value="normalized">Normalized Score (Sn / √n)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="numSteps"><strong>Steps (n):</strong> </label>
+                    <input type="number" id="numSteps" value="200" min="20" max="1000" style="width: 70px; padding: 4px;">
+                </div>
+                <div>
+                    <label for="numAttackers"><strong>Attackers (m):</strong> </label>
+                    <input type="number" id="numAttackers" value="30" min="5" max="100" style="width: 60px; padding: 4px;">
+                </div>
+                <div>
+                    <button type="button" onclick="runSimulation()" class="btn" style="padding: 6px 14px; font-size: 0.9rem; cursor:pointer;">Run Simulation</button>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="trajectoryCanvas"></canvas>
+            </div>
+            <div id="simulationStats" style="margin-top: 15px;"></div>
+        </section>
+
+        <!-- SECTION 3: LLN & CLT ANALYSIS -->
+        <section class="hw-card">
+            <h2>3. Mathematical Analysis: LLN vs. CLT</h2>
+            
+            <h3>Convergence in Probability (Law of Large Numbers)</h3>
+            <p>
+                By the <strong>Weak Law of Large Numbers (WLLN)</strong>, for any $\varepsilon > 0$:
+                $$\lim_{n \to \infty} P\left(\left| \frac{S_n}{n} - \mu \right| \ge \varepsilon\right) = 0$$
+                In the simulation, as $n$ increases, the trajectories for $S_n/n$ collapse onto a flat line corresponding to the expected mean ($\mu = 0$ for Rademacher, $\mu = 0.5$ for Bernoulli). The variance decays as $\mathcal{O}(1/n)$.
+            </p>
+
+            <h3>Convergence in Distribution (Central Limit Theorem)</h3>
+            <p>
+                By the <strong>Central Limit Theorem (CLT)</strong>, for independent Rademacher variables ($\mu = 0, \sigma^2 = 1$), the scaled sum satisfies:
+                $$Z_n = \frac{S_n - n\mu}{\sigma \sqrt{n}} = \frac{S_n}{\sqrt{n}} \xrightarrow{d} \mathcal{N}(0, 1) \quad \text{as } n \to \infty$$
+                When normalizing by $\sqrt{n}$, the variance is stabilized at $\text{Var}(S_n/\sqrt{n}) = 1$. The empirical distribution of terminal scores across $m$ attackers converges to the bell curve of a Standard Normal distribution.
+            </p>
+        </section>
+
+        <!-- SECTION 4: SECURITY INTERPRETATION -->
+        <section class="hw-card">
+            <h2>4. Cybersecurity Context &amp; Interpretation</h2>
+            <ul>
+                <li><strong>Effect of System Size ($n$):</strong> In large complex infrastructures ($n \to \infty$), aggregate metrics like $S_n/n$ become highly predictable due to statistical averaging. However, raw total score $S_n$ fluctuates severely with standard deviation scaling as $\sqrt{n}$.</li>
+                <li><strong>Effect of Number of Attackers ($m$):</strong> As the number of simultaneous attackers increases, the ensemble average approaches theoretical distributions (Gaussian under CLT), illustrating how threat actor behavior stabilizes at scale.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Statistics &amp; Cryptography MSc Portfolio | Hosted on GitHub Pages</p>
+    </footer>
+
+    <!-- INLINE SIMULATION SCRIPT -->
+    <script>
+        function runSimulation() {
+            try {
+                var model = document.getElementById("modelType").value;
+                var norm = document.getElementById("normType").value;
+                var n = parseInt(document.getElementById("numSteps").value);
+                var m = parseInt(document.getElementById("numAttackers").value);
+                var canvas = document.getElementById("trajectoryCanvas");
+                var ctx = canvas.getContext("2d");
+
+                // Set internal canvas resolution
+                canvas.width = canvas.parentElement.clientWidth - 20;
+                canvas.height = canvas.parentElement.clientHeight - 20;
+
+                var width = canvas.width;
+                var height = canvas.height;
+
+                // Generate M trajectories of N steps
+                var trajectories = [];
+                var minVal = Infinity, maxVal = -Infinity;
+
+                for (var a = 0; a < m; a++) {
+                    var traj = [0];
+                    var sum = 0;
+                    for (var i = 1; i <= n; i++) {
+                        var step = 0;
+                        if (model === "rademacher") {
+                            step = Math.random() < 0.5 ? -1 : 1;
+                        } else {
+                            step = Math.random() < 0.5 ? 0 : 1;
+                        }
+                        sum += step;
+
+                        var val = sum;
+                        if (norm === "average") val = sum / i;
+                        if (norm === "normalized") val = sum / Math.sqrt(i);
+
+                        traj.push(val);
+                        if (val < minVal) minVal = val;
+                        if (val > maxVal) maxVal = val;
+                    }
+                    trajectories.push(traj);
+                }
+
+                // Add margin to Y-axis range
+                var range = maxVal - minVal;
+                if (range === 0) range = 1;
+                minVal -= range * 0.1;
+                maxVal += range * 0.1;
+
+                // Clear Canvas
+                ctx.clearRect(0, 0, width, height);
+
+                // Draw Grid
+                ctx.strokeStyle = "#eef0f5";
+                ctx.lineWidth = 1;
+                for (var x = 0; x <= width; x += width / 10) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+                }
+                for (var y = 0; y <= height; y += height / 6) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+                }
+
+                // Function to map (step, value) to Canvas (x, y)
+                function mapX(step) { return (step / n) * width; }
+                function mapY(val) { return height - ((val - minVal) / (maxVal - minVal)) * height; }
+
+                // Draw zero reference line
+                var zeroY = mapY(0);
+                if (zeroY >= 0 && zeroY <= height) {
+                    ctx.strokeStyle = "#7b42bc";
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(0, zeroY);
+                    ctx.lineTo(width, zeroY);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                // Colors for trajectories
+                var colors = ["#7b42bc", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+
+                // Draw trajectories
+                for (var a = 0; a < m; a++) {
+                    ctx.strokeStyle = colors[a % colors.length];
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.moveTo(mapX(0), mapY(trajectories[a][0]));
+
+                    for (var i = 1; i <= n; i++) {
+                        ctx.lineTo(mapX(i), mapY(trajectories[a][i]));
+                    }
+                    ctx.stroke();
+                }
+
+                // Calculate terminal variance & statistics
+                var finalValues = trajectories.map(function(t) { return t[n]; });
+                var mean = finalValues.reduce(function(a, b) { return a + b; }, 0) / m;
+                var variance = finalValues.reduce(function(a, b) { return a + Math.pow(b - mean, 2); }, 0) / m;
+
+                var statsBox = document.getElementById("simulationStats");
+                statsBox.innerHTML = `
+                    <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc;">
+                        <p style="margin: 3px 0;"><strong>Simulation Summary (${m} Attackers, ${n} Steps):</strong></p>
+                        <p style="margin: 3px 0;">Empirical Mean of ${norm === "total" ? "S_n" : (norm === "average" ? "S_n/n" : "S_n/√n")}: <strong>${mean.toFixed(4)}</strong></p>
+                        <p style="margin: 3px 0;">Empirical Variance: <strong>${variance.toFixed(4)}</strong> (Min: ${minVal.toFixed(2)}, Max: ${maxVal.toFixed(2)})</p>
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        window.runSimulation = runSimulation;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            runSimulation();
+        });
+    </script>
+</body>
+</html>
