@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Statistics Homeworks - MSc Portfolio</title>
     <link rel="stylesheet" href="style.css">
+
+    <!-- MathJax per mostrare le formule matematiche pulite -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 
@@ -33,7 +44,7 @@
 
         <div class="hw-card">
             <h3>Homework 3: Stochastic Security &amp; Limit Theorems</h3>
-            <p>Simulating $n$ Cyber Attacks via Bernoulli and Rademacher Processes: Visualizing the Law of Large Numbers (LLN), Variance Scaling, and Central Limit Theorem (CLT) Convergence.</p>
+            <p>Simulating Penetration Trajectories across $n$ Systems and $m$ Attackers: Bernoulli vs Rademacher Models, Law of Large Numbers ($S_n/n$), and Central Limit Theorem ($S_n/\sqrt{n}$).</p>
             <a href="homework3.html" class="btn">View Homework 3</a>
         </div>
     </main>
