@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homework 4 - Welford's Algorithm & Online Sampling Distributions</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- MathJax Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            background: #ffffff;
+            border: 1px solid #e5d8f2;
+            border-radius: 8px;
+            margin-top: 15px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Homework 4</h1>
+        <p>Welford's Algorithm, Trajectory Sampling Distributions & Statistical Inference</p>
+        <nav>
+            <a href="index.html">&larr; Back to Home</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- EXERCISE 1: DERIVATION OF WELFORD'S FORMULA -->
+        <section class="hw-card">
+            <h2>Exercise 1: Derivation of Welford's Recurrence Formulas</h2>
+            <p>
+                In online data streams, computing sample variance using the standard formula $S_n = \sum_{i=1}^n x_i^2 - \frac{1}{n}\left(\sum_{i=1}^n x_i\right)^2$ leads to <strong>catastrophic cancellation</strong> due to floating-point precision loss. B.P. Welford (1962) introduced an exact single-pass algorithm updating mean $\bar{x}_n$ and sum of squared differences $M_{2,n} = \sum_{i=1}^n (x_i - \bar{x}_n)^2$.
+            </p>
+
+            <h3>1. Knuth's Mean Recurrence</h3>
+            <p>
+                $$\bar{x}_n = \frac{(n-1)\bar{x}_{n-1} + x_n}{n} = \bar{x}_{n-1} + \frac{x_n - \bar{x}_{n-1}}{n}$$
+            </p>
+
+            <h3>2. Welford's Sum of Squares ($M_{2,n}$) Recurrence</h3>
+            <p>
+                Split the sum into the first $(n-1)$ observations and the $n$-th observation:
+                $$M_{2,n} = \sum_{i=1}^{n-1} (x_i - \bar{x}_n)^2 + (x_n - \bar{x}_n)^2$$
+                Substituting $x_i - \bar{x}_n = (x_i - \bar{x}_{n-1}) - \frac{x_n - \bar{x}_{n-1}}{n}$ and simplifying yields the core update:
+                $$M_{2,n} = M_{2,n-1} + (x_n - \bar{x}_{n-1})(x_n - \bar{x}_n)$$
+            </p>
+
+            <h3>3. Core Implementation (3 Lines)</h3>
+            <div style="background: #272822; color: #f8f8f2; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 0.9rem;">
+                let delta = x - mean;<br>
+                mean += delta / count;<br>
+                M2 += delta * (x - mean); // Uses updated mean
+            </div>
+        </section>
+
+        <!-- EXERCISE 2: STOCHASTIC PENETRATION & SAMPLING DISTRIBUTIONS -->
+        <section class="hw-card">
+            <h2>Exercise 2: Multi-Hacker Penetration Simulation & Inferential Analysis</h2>
+            <p>
+                Each penetration attempt yields a score $X_i \in [0, 10]$ drawn from a Discrete Uniform distribution over $\{0, 1, \dots, 10\}$.
+            </p>
+            <ul>
+                <li><strong>Theoretical Mean:</strong> $\mu = \frac{0 + 10}{2} = 5.0000$</li>
+                <li><strong>Theoretical Variance:</strong> $\sigma^2 = \frac{(10 - 0 + 1)^2 - 1}{12} = \frac{120}{12} = 10.0000$</li>
+            </ul>
+
+            <div class="control-group" style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2; display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+                <div>
+                    <label for="numSystems"><strong>Systems ($n$):</strong> </label>
+                    <input type="number" id="numSystems" value="100" min="10" max="1000" style="width: 70px; padding: 4px;">
+                </div>
+                <div>
+                    <label for="numHackers"><strong>Hackers ($m$):</strong> </label>
+                    <input type="number" id="numHackers" value="50" min="5" max="200" style="width: 60px; padding: 4px;">
+                </div>
+                <div>
+                    <button type="button" onclick="runWelfordSim()" class="btn" style="padding: 6px 14px; font-size: 0.9rem; cursor:pointer;">Run Simulation</button>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="welfordCanvas"></canvas>
+            </div>
+            <div id="welfordStats" style="margin-top: 15px;"></div>
+        </section>
+
+        <!-- SECTION 3: INFERENTIAL STATISTICAL ANALYSIS -->
+        <section class="hw-card">
+            <h2>Statistical Interpretation &amp; Conclusions</h2>
+            <ul>
+                <li><strong>Unbiasedness of Estimators:</strong> Across $m$ hackers, the grand average of sample means $\frac{1}{m}\sum_{j=1}^m \bar{x}_j$ converges to the theoretical mean $\mu = 5.0$, and the grand average of sample variances $\frac{1}{m}\sum_{j=1}^m s_j^2$ converges to $\sigma^2 = 10.0$. This demonstrates that sample mean and sample variance (with $n-1$ denominator) are unbiased estimators.</li>
+                <li><strong>Effect of System Size ($n$):</strong> As $n$ increases, the variance of sample means shrinks proportionally to $\text{Var}(\bar{X}) = \frac{\sigma^2}{n}$. Individual hacker mean trajectories collapse tightly around $\mu = 5.0$.</li>
+                <li><strong>Usefulness in Inferential Statistics:</strong> Welford's algorithm allows security operations centers (SOC) to process continuous, unbounded log streams in real time without storing historical scores, maintaining numerically stable statistical confidence intervals.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Statistics MSc Portfolio | Hosted on GitHub Pages</p>
+    </footer>
+
+    <!-- INLINE SIMULATION SCRIPT -->
+    <script>
+        window.runWelfordSim = function() {
+            try {
+                var n = parseInt(document.getElementById("numSystems").value);
+                var m = parseInt(document.getElementById("numHackers").value);
+                var canvas = document.getElementById("welfordCanvas");
+                if (!canvas) return;
+                var ctx = canvas.getContext("2d");
+
+                canvas.width = canvas.parentElement.clientWidth - 20;
+                canvas.height = canvas.parentElement.clientHeight - 20;
+
+                var width = canvas.width;
+                var height = canvas.height;
+
+                var mu = 5.0;
+                var sigma2 = 10.0;
+
+                var hackerMeans = [];
+                var hackerVars = [];
+                var meanTrajectories = [];
+
+                for (var h = 0; h < m; h++) {
+                    var count = 0;
+                    var mean = 0.0;
+                    var M2 = 0.0;
+                    var traj = [0];
+
+                    for (var i = 1; i <= n; i++) {
+                        // Discrete Uniform Score between 0 and 10
+                        var x = Math.floor(Math.random() * 11);
+
+                        // Welford's 3-line core logic
+                        count++;
+                        var delta = x - mean;
+                        mean += delta / count;
+                        M2 += delta * (x - mean);
+
+                        traj.push(mean);
+                    }
+
+                    var sampleVar = count > 1 ? M2 / (count - 1) : 0;
+                    hackerMeans.push(mean);
+                    hackerVars.push(sampleVar);
+                    meanTrajectories.push(traj);
+                }
+
+                // Calculate grand averages
+                var grandMean = hackerMeans.reduce((a, b) => a + b, 0) / m;
+                var grandVar = hackerVars.reduce((a, b) => a + b, 0) / m;
+                var varOfMeans = hackerMeans.reduce((a, b) => a + Math.pow(b - grandMean, 2), 0) / m;
+
+                // Clear & Draw
+                ctx.clearRect(0, 0, width, height);
+
+                // Grid
+                ctx.strokeStyle = "#eef0f5";
+                ctx.lineWidth = 1;
+                for (var x = 0; x <= width; x += width / 10) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+                }
+                for (var y = 0; y <= height; y += height / 6) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+                }
+
+                function mapX(step) { return (step / n) * width; }
+                function mapY(val) { return height - ((val - 0) / 10) * height; }
+
+                // Reference line for mu = 5.0
+                var muY = mapY(5.0);
+                ctx.strokeStyle = "#7b42bc";
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath(); ctx.moveTo(0, muY); ctx.lineTo(width, muY); ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Trajectories
+                var colors = ["#7b42bc", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+                for (var h = 0; h < m; h++) {
+                    ctx.strokeStyle = colors[h % colors.length];
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.moveTo(mapX(0), mapY(meanTrajectories[h][0]));
+                    for (var i = 1; i <= n; i++) {
+                        ctx.lineTo(mapX(i), mapY(meanTrajectories[h][i]));
+                    }
+                    ctx.stroke();
+                }
+
+                var statsBox = document.getElementById("welfordStats");
+                if (statsBox) {
+                    statsBox.innerHTML = `
+                        <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc;">
+                            <p style="margin: 3px 0;"><strong>Ensemble Statistics (${m} Hackers, ${n} Systems):</strong></p>
+                            <p style="margin: 3px 0;">Grand Average of Sample Means ($\bar{X}$): <strong>${grandMean.toFixed(4)}</strong> (Theoretical $\mu = 5.0000$)</p>
+                            <p style="margin: 3px 0;">Grand Average of Sample Variances ($S^2$): <strong>${grandVar.toFixed(4)}</strong> (Theoretical $\sigma^2 = 10.0000$)</p>
+                            <p style="margin: 3px 0;">Variance of Sample Means $\text{Var}(\bar{X})$: <strong>${varOfMeans.toFixed(4)}</strong> (Theoretical $\sigma^2/n = ${(10.0/n).toFixed(4)}$)</p>
+                        </div>
+                    `;
+                    if (window.MathJax && window.MathJax.typeset) {
+                        window.MathJax.typeset();
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", function() {
+            window.runWelfordSim();
+        });
+    </script>
+</body>
+</html>
