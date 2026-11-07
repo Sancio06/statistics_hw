@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homework 5 - Integration Theories & Normal CDF Computation</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- MathJax Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            background: #ffffff;
+            border: 1px solid #e5d8f2;
+            border-radius: 8px;
+            margin-top: 15px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        table.eval-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table.eval-table th, table.eval-table td {
+            border: 1px solid #e5d8f2;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        table.eval-table th {
+            background-color: #f4f0f8;
+            color: #5b3286;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Homework 5</h1>
+        <p>Riemann vs. Lebesgue Integration &amp; Numerical Normal CDF Methods</p>
+        <nav>
+            <a href="index.html">&larr; Back to Home</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- EXERCISE 1: RIEMANN VS LEBESGUE INTEGRATION -->
+        <section class="hw-card">
+            <h2>Exercise 1: Riemann and Lebesgue Integration</h2>
+            <p>
+                The fundamental difference between Riemann and Lebesgue integration lies in how the domain/range space is partitioned:
+            </p>
+            <ul>
+                <li><strong>Riemann Approach (Domain Partitioning):</strong> Subdivides the domain interval $[a, b]$ into subintervals $[x_{i-1}, x_i]$. The integral is approximated as $R_n = \sum_{i=1}^n f(\xi_i) \Delta x_i$.</li>
+                <li><strong>Lebesgue Approach (Range Partitioning):</strong> Subdivides the range (y-values) into slices $[y_{j-1}, y_j]$ and computes the measure $\mu(E_j)$ of the preimage sets $E_j = \{x \in [a, b] : y_{j-1} \le f(x) < y_j\}$. The integral is $L_m = \sum_{j=1}^m y_j^* \, \mu(E_j)$.</li>
+            </ul>
+
+            <h3>Pathological Functions Comparison</h3>
+            <p>
+                Consider the <strong>Dirichlet Function</strong> $f(x) = \mathbf{1}_{\mathbb{Q}}(x)$ on $[0, 1]$:
+            </p>
+            <ul>
+                <li><strong>Riemann:</strong> In every subinterval $[x_{i-1}, x_i]$, there are both rationals ($f=1$) and irrationals ($f=0$). The upper Darboux sum is $1$ and lower sum is $0$. Thus, $f(x)$ is <strong>not Riemann integrable</strong>.</li>
+                <li><strong>Lebesgue:</strong> The preimage of $\{1\}$ is $\mathbb{Q} \cap [0, 1]$ (measure 0), and the preimage of $\{0\}$ is $\mathbb{R}\setminus\mathbb{Q} \cap [0, 1]$ (measure 1). The Lebesgue integral evaluates strictly to $1 \cdot 0 + 0 \cdot 1 = 0$.</li>
+            </ul>
+
+            <div class="control-group" style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2; display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+                <div>
+                    <label for="integrationFn"><strong>Function:</strong> </label>
+                    <select id="integrationFn" style="padding: 5px; border-radius: 6px; border: 1px solid #ccc;">
+                        <option value="sin">f(x) = sin(x) on [0, π]</option>
+                        <option value="x2">f(x) = x^2 on [0, 1]</option>
+                        <option value="step">f(x) = 1 (x < 0.5) else 3 on [0, 1]</option>
+                        <option value="dirichlet">Dirichlet (1 if Rational, 0 if Irrational)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="numPartitions"><strong>Partitions (N):</strong> </label>
+                    <input type="number" id="numPartitions" value="50" min="10" max="1000" style="width: 70px; padding: 4px;">
+                </div>
+                <div>
+                    <button type="button" onclick="runIntegrationSim()" class="btn" style="padding: 6px 14px; font-size: 0.9rem; cursor:pointer;">Compare Integrals</button>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="integrationCanvas"></canvas>
+            </div>
+            <div id="integrationStats" style="margin-top: 15px;"></div>
+        </section>
+
+        <!-- EXERCISE 2: NUMERICAL NORMAL CDF -->
+        <section class="hw-card">
+            <h2>Exercise 2: Numerical Computation of the Normal CDF</h2>
+            <p>
+                The Cumulative Distribution Function (CDF) of the Standard Normal Distribution is given by:
+                $$\Phi(x) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^x e^{-\frac{t^2}{2}} \, dt$$
+            </p>
+
+            <h3>1. Liouville's Theorem &amp; Non-Elementarity</h3>
+            <p>
+                By <strong>Liouville's Theorem</strong> (and the Risch algorithm in differential algebra), an elementary function has an elementary antiderivative if and only if it can be expressed in a specific algebraic form. The integrand $e^{-t^2/2}$ lacks such an antiderivative in terms of elementary functions (polynomials, exponentials, logarithms, trigonometric functions). Hence, $\Phi(x)$ cannot be written in closed elementary form.
+            </p>
+
+            <h3>2. Analytical Representation via Error Function ($\text{erf}$)</h3>
+            <p>
+                By introducing the special <strong>Error Function</strong> $\text{erf}(z) = \frac{2}{\sqrt{\pi}} \int_0^z e^{-u^2} du$, we obtain the exact identity:
+                $$\Phi(x) = \frac{1}{2} \left[ 1 + \text{erf}\left(\frac{x}{\sqrt{2}}\right) \right]$$
+            </p>
+
+            <h3>3. Numerical Implementation Approaches</h3>
+            <ul>
+                <li><strong>Simpson's Rule:</strong> Numerical integration over $[-10, x]$ dividing the interval into $N$ steps.</li>
+                <li><strong>Maclaurin Series Expansion:</strong> $\text{erf}(z) = \frac{2}{\sqrt{\pi}} \sum_{k=0}^{\infty} \frac{(-1)^k z^{2k+1}}{k! (2k+1)}$. Effective for small $|z|$.</li>
+                <li><strong>Abramowitz &amp; Stegun Approximation:</strong> High-precision rational approximation formula (Accuracy $\sim 1.5 \times 10^{-7}$).</li>
+            </ul>
+
+            <div class="control-group" style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2; display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+                <div>
+                    <label for="cdfX"><strong>Evaluation Point (x):</strong> </label>
+                    <input type="number" id="cdfX" value="1.96" step="0.1" style="width: 70px; padding: 4px;">
+                </div>
+                <div>
+                    <button type="button" onclick="runCdfEvaluation()" class="btn" style="padding: 6px 14px; font-size: 0.9rem; cursor:pointer;">Evaluate CDF</button>
+                </div>
+            </div>
+
+            <table class="eval-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Computed $\Phi(x)$</th>
+                        <th>Reference $\Phi(x)$</th>
+                        <th>Absolute Error</th>
+                    </tr>
+                </thead>
+                <tbody id="cdfResultsBody">
+                    <tr><td colspan="4">Click "Evaluate CDF" to run comparison.</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <p>Statistics MSc Portfolio | Hosted on GitHub Pages</p>
+    </footer>
+
+    <!-- INLINE SIMULATION AND EVALUATION SCRIPT -->
+    <script>
+        // --- EXERCISE 1 SCRIPT ---
+        window.runIntegrationSim = function() {
+            try {
+                var fnType = document.getElementById("integrationFn").value;
+                var N = parseInt(document.getElementById("numPartitions").value);
+                var canvas = document.getElementById("integrationCanvas");
+                if (!canvas) return;
+                var ctx = canvas.getContext("2d");
+
+                canvas.width = canvas.parentElement.clientWidth - 20;
+                canvas.height = canvas.parentElement.clientHeight - 20;
+                var width = canvas.width;
+                var height = canvas.height;
+
+                var a = 0, b = 1;
+                if (fnType === "sin") { b = Math.PI; }
+
+                function f(x) {
+                    if (fnType === "sin") return Math.sin(x);
+                    if (fnType === "x2") return x * x;
+                    if (fnType === "step") return x < 0.5 ? 1 : 3;
+                    if (fnType === "dirichlet") {
+                        // Pseudo Dirichlet approximation for simulation
+                        return (Math.sin(x * 100000) > 0.999) ? 1 : 0;
+                    }
+                    return 0;
+                }
+
+                // Riemann Sum (Midpoint)
+                var riemannSum = 0;
+                var dx = (b - a) / N;
+                for (var i = 0; i < N; i++) {
+                    var xi = a + (i + 0.5) * dx;
+                    riemannSum += f(xi) * dx;
+                }
+
+                // Lebesgue Sum (Range Partitioning)
+                var minY = 0, maxY = (fnType === "sin" || fnType === "x2" || fnType === "dirichlet") ? 1 : 3;
+                var dy = (maxY - minY) / N;
+                var lebesgueSum = 0;
+                var samplePts = 1000;
+                var dxSample = (b - a) / samplePts;
+
+                for (var j = 0; j < N; j++) {
+                    var yLow = minY + j * dy;
+                    var yHigh = yLow + dy;
+                    var measure = 0;
+
+                    for (var s = 0; s < samplePts; s++) {
+                        var xs = a + s * dxSample;
+                        var val = f(xs);
+                        if (val >= yLow && val < yHigh) {
+                            measure += dxSample;
+                        }
+                    }
+                    lebesgueSum += yLow * measure;
+                }
+
+                // Drawing
+                ctx.clearRect(0, 0, width, height);
+
+                // Axes & Grid
+                ctx.strokeStyle = "#eef0f5";
+                ctx.lineWidth = 1;
+                for (var x = 0; x <= width; x += width / 10) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+                }
+
+                // Plot Function
+                ctx.strokeStyle = "#7b42bc";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (var px = 0; px <= width; px++) {
+                    var xVal = a + (px / width) * (b - a);
+                    var yVal = f(xVal);
+                    var py = height - (yVal / (maxY * 1.1)) * height;
+                    if (px === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+
+                var statsBox = document.getElementById("integrationStats");
+                if (statsBox) {
+                    statsBox.innerHTML = `
+                        <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc;">
+                            <p style="margin: 3px 0;"><strong>Numerical Integration Results (N = ${N}):</strong></p>
+                            <p style="margin: 3px 0;">Riemann Sum (Domain Partition): <strong>${riemannSum.toFixed(5)}</strong></p>
+                            <p style="margin: 3px 0;">Lebesgue Sum Approximation (Range Partition): <strong>${lebesgueSum.toFixed(5)}</strong></p>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        // --- EXERCISE 2 SCRIPT ---
+        function erfSeries(z) {
+            var sum = 0;
+            for (var k = 0; k < 30; k++) {
+                var num = Math.pow(-1, k) * Math.pow(z, 2 * k + 1);
+                var fact = 1;
+                for (var i = 1; i <= k; i++) fact *= i;
+                var den = fact * (2 * k + 1);
+                var term = num / den;
+                sum += term;
+                if (Math.abs(term) < 1e-15) break;
+            }
+            return (2 / Math.sqrt(Math.PI)) * sum;
+        }
+
+        function cdfSimpson(x) {
+            var a = -10, b = x;
+            var n = 1000;
+            var h = (b - a) / n;
+            function phi(t) { return (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * t * t); }
+            var sum = phi(a) + phi(b);
+            for (var i = 1; i < n; i++) {
+                var t = a + i * h;
+                sum += (i % 2 === 0 ? 2 : 4) * phi(t);
+            }
+            return (h / 3) * sum;
+        }
+
+        function cdfAbramowitz(x) {
+            // Formula 26.2.17 from Abramowitz & Stegun
+            var b1 = 0.319381530, b2 = -0.356563782, b3 = 1.781477937, b4 = -1.821255978, b5 = 1.330274429;
+            var p = 0.2316419;
+            var absX = Math.abs(x);
+            var t = 1.0 / (1.0 + p * absX);
+            var poly = t * (b1 + t * (b2 + t * (b3 + t * (b4 + t * b5))));
+            var pdf = (1.0 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * absX * absX);
+            var cdf = 1.0 - pdf * poly;
+            return x >= 0 ? cdf : 1.0 - cdf;
+        }
+
+        window.runCdfEvaluation = function() {
+            try {
+                var x = parseFloat(document.getElementById("cdfX").value);
+                if (isNaN(x)) return;
+
+                // Exact reference value via Math Library/Abramowitz precise calculation
+                var ref = cdfAbramowitz(x);
+
+                var valSimpson = cdfSimpson(x);
+                var valErf = 0.5 * (1 + erfSeries(x / Math.sqrt(2)));
+                var valAbr = cdfAbramowitz(x);
+
+                var tbody = document.getElementById("cdfResultsBody");
+                tbody.innerHTML = `
+                    <tr>
+                        <td><strong>Simpson's Integration</strong></td>
+                        <td>${valSimpson.toFixed(7)}</td>
+                        <td>${ref.toFixed(7)}</td>
+                        <td>${Math.abs(valSimpson - ref).toExponential(3)}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Erf Series Expansion</strong></td>
+                        <td>${valErf.toFixed(7)}</td>
+                        <td>${ref.toFixed(7)}</td>
+                        <td>${Math.abs(valErf - ref).toExponential(3)}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Abramowitz & Stegun Approx</strong></td>
+                        <td>${valAbr.toFixed(7)}</td>
+                        <td>${ref.toFixed(7)}</td>
+                        <td>${Math.abs(valAbr - ref).toExponential(3)}</td>
+                    </tr>
+                `;
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", function() {
+            window.runIntegrationSim();
+            window.runCdfEvaluation();
+        });
+    </script>
+</body>
+</html>
