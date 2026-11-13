@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homework 6 - Bivariate Analysis, Contingency Tables &amp; Chi-Square Test</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- MathJax Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        table.stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            margin-bottom: 18px;
+            font-size: 0.9rem;
+        }
+        table.stats-table th, table.stats-table td {
+            border: 1px solid #d8c8eb;
+            padding: 8px 10px;
+            text-align: center;
+        }
+        table.stats-table th {
+            background-color: #f4f0f8;
+            color: #4a2574;
+            font-weight: bold;
+        }
+        table.stats-table tr.total-row td {
+            background-color: #fafafa;
+            font-weight: bold;
+            border-top: 2px solid #7b42bc;
+        }
+        table.stats-table td.total-col {
+            background-color: #fafafa;
+            font-weight: bold;
+            border-left: 2px solid #7b42bc;
+        }
+        .badge-dep {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            background-color: #fde8e8;
+            color: #9b1c1c;
+            font-weight: bold;
+            border: 1px solid #f8b4b4;
+        }
+        .badge-indep {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            background-color: #def7ec;
+            color: #03543f;
+            font-weight: bold;
+            border: 1px solid #84e1bc;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Homework 6</h1>
+        <p>Bivariate Contingency Tables, Conditional Distributions &amp; Chi-Square Independence Test</p>
+        <nav>
+            <a href="index.html">&larr; Back to Home</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- SECTION 1: THEORETICAL FOUNDATIONS -->
+        <section class="hw-card">
+            <h2>1. Theoretical Foundations of Statistical Independence</h2>
+            <p>
+                Given a bivariate dataset of $N$ paired observations $(X_k, Y_k)$ where $X$ takes $r$ distinct categorical values $\{x_1, \dots, x_r\}$ and $Y$ takes $c$ distinct values $\{y_1, \dots, y_c\}$, we summarize their joint behavior in an $r \times c$ <strong>contingency table</strong>.
+            </p>
+            <ul>
+                <li><strong>Joint &amp; Marginal Frequencies:</strong> Let $O_{ij}$ be the observed absolute frequency of pair $(x_i, y_j)$. The row marginal is $R_i = \sum_{j=1}^c O_{ij}$ and column marginal is $C_j = \sum_{i=1}^r O_{ij}$, with $\sum_{i,j} O_{ij} = N$.</li>
+                <li><strong>Conditional Frequencies:</strong> The empirical conditional distribution of $Y$ given $X = x_i$ is $f(y_j \mid x_i) = \frac{O_{ij}}{R_i}$.</li>
+                <li><strong>Stochastic Independence:</strong> Two discrete random variables $X$ and $Y$ are statistically independent if and only if their joint probability factorizes into the product of their marginals:
+                    $$P(X = x_i, Y = y_j) = P(X = x_i) \cdot P(Y = y_j) \iff P(Y = y_j \mid X = x_i) = P(Y = y_j) \quad \forall i, j$$
+                </li>
+            </ul>
+
+            <h3>Expected Frequencies &amp; Pearson's Chi-Square Statistic</h3>
+            <p>
+                Under the null hypothesis $H_0$ of independence, the theoretical expected frequency $E_{ij}$ for cell $(i, j)$ is:
+                $$E_{ij} = N \cdot \left(\frac{R_i}{N}\right) \cdot \left(\frac{C_j}{N}\right) = \frac{R_i \cdot C_j}{N}$$
+                To measure the discrepancy between observed data and $H_0$, we compute <strong>Pearson's Chi-Square ($\chi^2$) statistic</strong>:
+                $$\chi^2 = \sum_{i=1}^r \sum_{j=1}^c \frac{(O_{ij} - E_{ij})^2}{E_{ij}}$$
+                As $N \to \infty$, under $H_0$, $\chi^2$ converges in distribution to a $\chi^2_\nu$ random variable with $\nu = (r - 1)(c - 1)$ degrees of freedom.
+            </p>
+        </section>
+
+        <!-- SECTION 2: PROGRAMMATIC CONTINGENCY TABLE ENGINE -->
+        <section class="hw-card">
+            <h2>2. Programmatic Bivariate Analyzer &amp; Hypothesis Test</h2>
+            <p>
+                Select a preset bivariate dataset or edit the raw $(X, Y)$ observation pairs directly below (one pair per line, comma-separated) to construct the contingency tables and run the $\chi^2$ test:
+            </p>
+
+            <div class="control-group" style="background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e5d8f2;">
+                <div style="margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                    <label for="datasetPreset"><strong>Preset Dataset:</strong></label>
+                    <select id="datasetPreset" onchange="loadPreset()" style="padding: 5px; border-radius: 6px; border: 1px solid #ccc;">
+                        <option value="cyber_dep">Cybersecurity Logs: Attack Vector vs. Breach Outcome (Dependent)</option>
+                        <option value="server_indep">Server Telemetry: OS Type vs. Random Packet Drop (Independent)</option>
+                        <option value="academic_dep">Academic Survey: Study Method vs. Exam Grade Tier (Dependent)</option>
+                    </select>
+                    <label for="alphaLevel"><strong>Significance ($\alpha$):</strong></label>
+                    <select id="alphaLevel" style="padding: 5px; border-radius: 6px; border: 1px solid #ccc;">
+                        <option value="0.05" selected>0.05 (5%)</option>
+                        <option value="0.01">0.01 (1%)</option>
+                        <option value="0.10">0.10 (10%)</option>
+                    </select>
+                    <button type="button" onclick="analyzeBivariate()" class="btn" style="padding: 6px 14px; font-size: 0.9rem; cursor:pointer;">Compute Tables &amp; $\chi^2$</button>
+                </div>
+
+                <label for="rawDataset" style="font-size: 0.85rem; color: #555;"><strong>Raw Bivariate Dataset $(X, Y)$:</strong> (format: <code>X_value, Y_value</code> per line)</label>
+                <textarea id="rawDataset" style="width: 100%; height: 110px; margin-top: 5px; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-family: monospace; font-size: 0.85rem; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div id="analysisOutput" style="margin-top: 20px;"></div>
+        </section>
+
+        <!-- SECTION 3: INTERPRETATION & CAUSALITY -->
+        <section class="hw-card">
+            <h2>3. Interpretation: Statistical Association vs. Causality</h2>
+            <ul>
+                <li><strong>Decision Rule:</strong> If the computed p-value is smaller than the significance level $\alpha$ (equivalently, $\chi^2_{\text{obs}} &gt; \chi^2_{\text{crit}}$), we reject $H_0$ and conclude that $X$ and $Y$ are <strong>statistically dependent</strong>. Otherwise, the observed deviations from $E_{ij}$ are consistent with random sampling fluctuations.</li>
+                <li><strong>Association Does Not Imply Causation:</strong> Finding statistical dependence ($\chi^2$ significant) establishes a structural correlation between $X$ and $Y$—meaning knowing $X$ alters the conditional probability distribution of $Y$. However, observational contingency tables <em>cannot</em> prove that $X$ directly causes $Y$:
+                    <ul>
+                        <li><strong>Confounding Variables (Lurking Factors):</strong> A third unobserved variable $Z$ may drive both $X$ and $Y$ simultaneously (e.g., high network traffic $Z$ causing both elevated firewall alerts $X$ and server latency $Y$).</li>
+                        <li><strong>Reverse Causality &amp; Selection Bias:</strong> Contingency tables are symmetric ($\chi^2(X,Y) = \chi^2(Y,X)$) and carry no directional or temporal information.</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Statistics MSc Portfolio | Hosted on GitHub Pages</p>
+    </footer>
+
+    <!-- EMBEDDED BIVARIATE ENGINE & GAMMA P-VALUE COMPUTATION -->
+    <script>
+        var presets = {
+            cyber_dep: [
+                "Phishing, Compromised", "Phishing, Compromised", "Phishing, Compromised", "Phishing, Compromised", "Phishing, Compromised",
+                "Phishing, Compromised", "Phishing, Compromised", "Phishing, Compromised", "Phishing, Blocked", "Phishing, Blocked",
+                "Phishing, Blocked", "Phishing, Blocked", "Malware, Compromised", "Malware, Compromised", "Malware, Compromised",
+                "Malware, Compromised", "Malware, Compromised", "Malware, Blocked", "Malware, Blocked", "Malware, Blocked",
+                "Malware, Blocked", "Malware, Blocked", "DDoS, Compromised", "DDoS, Blocked", "DDoS, Blocked",
+                "DDoS, Blocked", "DDoS, Blocked", "DDoS, Blocked", "DDoS, Blocked", "DDoS, Blocked",
+                "DDoS, Blocked", "DDoS, Blocked", "DDoS, Blocked", "DDoS, Blocked", "DDoS, Blocked",
+                "SQLi, Compromised", "SQLi, Compromised", "SQLi, Compromised", "SQLi, Compromised", "SQLi, Blocked",
+                "SQLi, Blocked", "SQLi, Blocked", "SQLi, Blocked", "SQLi, Blocked", "SQLi, Blocked"
+            ].join("\n"),
+
+            server_indep: [
+                "Linux, No_Drop", "Linux, No_Drop", "Linux, No_Drop", "Linux, No_Drop", "Linux, No_Drop",
+                "Linux, No_Drop", "Linux, No_Drop", "Linux, No_Drop", "Linux, Packet_Drop", "Linux, Packet_Drop",
+                "Windows, No_Drop", "Windows, No_Drop", "Windows, No_Drop", "Windows, No_Drop", "Windows, No_Drop",
+                "Windows, No_Drop", "Windows, No_Drop", "Windows, No_Drop", "Windows, Packet_Drop", "Windows, Packet_Drop",
+                "BSD, No_Drop", "BSD, No_Drop", "BSD, No_Drop", "BSD, No_Drop", "BSD, No_Drop",
+                "BSD, No_Drop", "BSD, No_Drop", "BSD, No_Drop", "BSD, Packet_Drop", "BSD, Packet_Drop"
+            ].join("\n"),
+
+            academic_dep: [
+                "Active_Recall, High", "Active_Recall, High", "Active_Recall, High", "Active_Recall, High", "Active_Recall, High",
+                "Active_Recall, High", "Active_Recall, High", "Active_Recall, Medium", "Active_Recall, Medium", "Active_Recall, Low",
+                "Practice_Tests, High", "Practice_Tests, High", "Practice_Tests, High", "Practice_Tests, High", "Practice_Tests, High",
+                "Practice_Tests, Medium", "Practice_Tests, Medium", "Practice_Tests, Medium", "Practice_Tests, Low", "Practice_Tests, Low",
+                "Passive_Reading, High", "Passive_Reading, Medium", "Passive_Reading, Medium", "Passive_Reading, Medium", "Passive_Reading, Low",
+                "Passive_Reading, Low", "Passive_Reading, Low", "Passive_Reading, Low", "Passive_Reading, Low", "Passive_Reading, Low"
+            ].join("\n")
+        };
+
+        window.loadPreset = function() {
+            var key = document.getElementById("datasetPreset").value;
+            document.getElementById("rawDataset").value = presets[key];
+            window.analyzeBivariate();
+        };
+
+        // Regularized upper incomplete gamma function Q(a, x) for exact Chi-Square p-value
+        function logGamma(z) {
+            var c = [76.18009172947146, -86.50532032941677, 24.01409824083091,
+                     -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+            var x = z, y = z;
+            var tmp = x + 5.5;
+            tmp -= (x + 0.5) * Math.log(tmp);
+            var ser = 1.000000000190015;
+            for (var j = 0; j < 6; j++) ser += c[j] / ++y;
+            return -tmp + Math.log(2.5066282746310005 * ser / x);
+        }
+
+        function chiSquarePValue(chi2, df) {
+            if (chi2 <= 0 || df <= 0) return 1.0;
+            var a = df / 2.0;
+            var x = chi2 / 2.0;
+            var gln = logGamma(a);
+
+            if (x < a + 1.0) {
+                // Series representation for lower incomplete gamma P(a, x)
+                var ap = a, del = 1.0 / a, sum = del;
+                for (var n = 1; n <= 200; n++) {
+                    ap += 1.0;
+                    del *= x / ap;
+                    sum += del;
+                    if (Math.abs(del) < Math.abs(sum) * 1e-14) break;
+                }
+                var pLower = sum * Math.exp(-x + a * Math.log(x) - gln);
+                return Math.max(0, 1.0 - pLower);
+            } else {
+                // Continued fraction for upper incomplete gamma Q(a, x)
+                var b = x + 1.0 - a, c = 1.0 / 1e-30, d = 1.0 / b, h = d;
+                for (var i = 1; i <= 200; i++) {
+                    var an = -i * (i - a);
+                    b += 2.0;
+                    d = an * d + b;
+                    if (Math.abs(d) < 1e-30) d = 1e-30;
+                    c = b + an / c;
+                    if (Math.abs(c) < 1e-30) c = 1e-30;
+                    d = 1.0 / d;
+                    var del = d * c;
+                    h *= del;
+                    if (Math.abs(del - 1.0) < 1e-14) break;
+                }
+                return Math.max(0, Math.exp(-x + a * Math.log(x) - gln) * h);
+            }
+        }
+
+        window.analyzeBivariate = function() {
+            try {
+                var raw = document.getElementById("rawDataset").value.trim();
+                var alpha = parseFloat(document.getElementById("alphaLevel").value);
+                var out = document.getElementById("analysisOutput");
+                if (!raw || !out) return;
+
+                var lines = raw.split("\n");
+                var pairs = [];
+                var xSet = new Set();
+                var ySet = new Set();
+
+                for (var i = 0; i < lines.length; i++) {
+                    var parts = lines[i].split(",");
+                    if (parts.length >= 2) {
+                        var xVal = parts[0].trim();
+                        var yVal = parts[1].trim();
+                        if (xVal !== "" && yVal !== "") {
+                            pairs.push([xVal, yVal]);
+                            xSet.add(xVal);
+                            ySet.add(yVal);
+                        }
+                    }
+                }
+
+                var N = pairs.length;
+                var xLabels = Array.from(xSet);
+                var yLabels = Array.from(ySet);
+                var r = xLabels.length;
+                var c = yLabels.length;
+
+                if (N === 0 || r < 2 || c < 2) {
+                    out.innerHTML = "<p style='color:red;'>Please provide at least 2 distinct values for both X and Y.</p>";
+                    return;
+                }
+
+                // Initialize Observed Matrix O[i][j]
+                var O = Array.from({ length: r }, () => new Array(c).fill(0));
+                var rowTotals = new Array(r).fill(0);
+                var colTotals = new Array(c).fill(0);
+
+                for (var k = 0; k < N; k++) {
+                    var xi = xLabels.indexOf(pairs[k][0]);
+                    var yj = yLabels.indexOf(pairs[k][1]);
+                    O[xi][yj]++;
+                    rowTotals[xi]++;
+                    colTotals[yj]++;
+                }
+
+                // Expected Matrix E[i][j] and Chi-Square
+                var E = Array.from({ length: r }, () => new Array(c).fill(0));
+                var chi2 = 0;
+
+                for (var i = 0; i < r; i++) {
+                    for (var j = 0; j < c; j++) {
+                        E[i][j] = (rowTotals[i] * colTotals[j]) / N;
+                        if (E[i][j] > 0) {
+                            chi2 += Math.pow(O[i][j] - E[i][j], 2) / E[i][j];
+                        }
+                    }
+                }
+
+                var df = (r - 1) * (c - 1);
+                var pVal = chiSquarePValue(chi2, df);
+                var cramersV = Math.sqrt(chi2 / (N * Math.min(r - 1, c - 1)));
+                var isDependent = pVal < alpha;
+
+                // Build Table 1: Observed & Conditional Frequencies f(Y|X)
+                var html = "<h3>Table 1: Observed Frequencies $O_{ij}$, Marginals &amp; Conditional $f(Y \\mid X)$</h3>";
+                html += "<table class='stats-table'><thead><tr><th>X \\ Y</th>";
+                for (var j = 0; j < c; j++) html += "<th>" + yLabels[j] + "</th>";
+                html += "<th>Row Marginal $R_i$</th></tr></thead><tbody>";
+
+                for (var i = 0; i < r; i++) {
+                    html += "<tr><th>" + xLabels[i] + "</th>";
+                    for (var j = 0; j < c; j++) {
+                        var condPct = ((O[i][j] / rowTotals[i]) * 100).toFixed(1);
+                        html += "<td><strong>" + O[i][j] + "</strong> <span style='color:#666; font-size:0.8rem;'>(" + condPct + "%)</span></td>";
+                    }
+                    var rowMargPct = ((rowTotals[i] / N) * 100).toFixed(1);
+                    html += "<td class='total-col'>" + rowTotals[i] + " (" + rowMargPct + "%)</td></tr>";
+                }
+
+                html += "<tr class='total-row'><td>Col Marginal $C_j$</td>";
+                for (var j = 0; j < c; j++) {
+                    var colMargPct = ((colTotals[j] / N) * 100).toFixed(1);
+                    html += "<td>" + colTotals[j] + " (" + colMargPct + "%)</td>";
+                }
+                html += "<td>N = " + N + " (100%)</td></tr></tbody></table>";
+
+                // Build Table 2: Expected Frequencies E[i][j] & Cell Chi-Square Contributions
+                html += "<h3>Table 2: Expected Frequencies $E_{ij}$ Under Independence &amp; Cell $(O_{ij}-E_{ij})^2/E_{ij}$</h3>";
+                html += "<table class='stats-table'><thead><tr><th>X \\ Y</th>";
+                for (var j = 0; j < c; j++) html += "<th>" + yLabels[j] + "</th>";
+                html += "<th>Row Sum</th></tr></thead><tbody>";
+
+                for (var i = 0; i < r; i++) {
+                    html += "<tr><th>" + xLabels[i] + "</th>";
+                    for (var j = 0; j < c; j++) {
+                        var contrib = E[i][j] > 0 ? (Math.pow(O[i][j] - E[i][j], 2) / E[i][j]).toFixed(3) : "0.000";
+                        html += "<td>" + E[i][j].toFixed(2) + " <span style='color:#7b42bc; font-size:0.8rem;'>[&chi;&sup2;: " + contrib + "]</span></td>";
+                    }
+                    html += "<td class='total-col'>" + rowTotals[i].toFixed(2) + "</td></tr>";
+                }
+                html += "</tbody></table>";
+
+                // Hypothesis Test Verdict Box
+                html += `
+                    <div style="background: #f4f0f8; padding: 15px; border-radius: 8px; border-left: 4px solid #7b42bc; margin-top: 15px;">
+                        <p style="margin: 4px 0; font-size: 1.05rem;"><strong>Chi-Square Test Summary (N = ${N}):</strong></p>
+                        <p style="margin: 4px 0;">&bull; <strong>Chi-Square Statistic ($\chi^2$):</strong> ${chi2.toFixed(4)} &nbsp;|&nbsp; <strong>Degrees of Freedom ($\nu$):</strong> ${df}</p>
+                        <p style="margin: 4px 0;">&bull; <strong>Exact p-value:</strong> ${pVal < 0.0001 ? pVal.toExponential(3) : pVal.toFixed(4)} &nbsp;|&nbsp; <strong>Cram&eacute;r's V (Effect Size):</strong> ${cramersV.toFixed(3)}</p>
+                        <p style="margin: 8px 0 0 0;"><strong>Statistical Conclusion ($\alpha = ${alpha}$):</strong> 
+                            ${isDependent 
+                                ? `<span class="badge-dep">DEPENDENT (Reject $H_0$)</span> — Conditional distributions $f(Y \\mid X)$ differ significantly across categories of $X$.` 
+                                : `<span class="badge-indep">INDEPENDENT (Fail to Reject $H_0$)</span> — Observed variations are consistent with statistical independence.`}
+                        </p>
+                    </div>
+                `;
+
+                out.innerHTML = html;
+                if (window.MathJax && window.MathJax.typeset) {
+                    window.MathJax.typeset();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", function() {
+            window.loadPreset();
+        });
+    </script>
+</body>
+</html>
