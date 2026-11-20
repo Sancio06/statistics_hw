@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homework 7 - Modes of Convergence &amp; Bayesian Statistical Inference</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- MathJax Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 340px;
+            background: #ffffff;
+            border: 1px solid #e5d8f2;
+            border-radius: 8px;
+            margin-top: 15px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        table.stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+        table.stats-table th, table.stats-table td {
+            border: 1px solid #d8c8eb;
+            padding: 9px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        table.stats-table th {
+            background-color: #f4f0f8;
+            color: #4a2574;
+        }
+        .hierarchy-box {
+            background: #f4f0f8;
+            border-left: 4px solid #7b42bc;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 14px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Homework 7</h1>
+        <p>Modes of Stochastic Convergence, $\sqrt{n}$-Scaling &amp; Bayesian Statistical Inference</p>
+        <nav>
+            <a href="index.html">&larr; Back to Home</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- PART 1: MODES OF CONVERGENCE -->
+        <section class="hw-card">
+            <h2>Part 1: Modes of Convergence in Probability Theory</h2>
+            <p>
+                In probability theory and asymptotic statistics, a sequence of random variables $\{X_n\}_{n \ge 1}$ defined on a probability space $(\Omega, \mathcal{F}, P)$ can approach a limiting random variable $X$ (or constant $c$) in several distinct mathematical senses:
+            </p>
+
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Mode of Convergence</th>
+                        <th>Formal Mathematical Definition</th>
+                        <th>Key Role in Statistics &amp; Limit Theorems</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Almost Sure ($a.s.$)</strong><br>$X_n \xrightarrow{a.s.} X$</td>
+                        <td>$$P\left(\left\{\omega \in \Omega : \lim_{n \to \infty} X_n(\omega) = X(\omega)\right\}\right) = 1$$</td>
+                        <td><strong>Strong Law of Large Numbers (SLLN):</strong> Guarantees that almost every individual sample path $\bar{X}_n(\omega)$ converges pointwise to $\mu$.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mean-Square ($L^2$)</strong><br>$X_n \xrightarrow{L^2} X$</td>
+                        <td>$$\lim_{n \to \infty} \mathbb{E}\left[|X_n - X|^2\right] = 0$$</td>
+                        <td><strong>Estimator Consistency (MSE):</strong> Since $\text{MSE}(\hat{\theta}_n) = \text{Var}(\hat{\theta}_n) + \text{Bias}^2(\hat{\theta}_n)$, $L^2$ convergence implies both asymptotic unbiasedness and vanishing variance.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>In Probability ($\xrightarrow{p}$)</strong><br>$X_n \xrightarrow{p} X$</td>
+                        <td>$$\forall \varepsilon &gt; 0, \quad \lim_{n \to \infty} P\left(|X_n - X| \ge \varepsilon\right) = 0$$</td>
+                        <td><strong>Weak Law of Large Numbers (WLLN) &amp; Slutsky's Theorem:</strong> Defines weak consistency of statistical estimators ($\hat{\theta}_n \xrightarrow{p} \theta$).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>In Distribution ($\xrightarrow{d}$)</strong><br>$X_n \xrightarrow{d} X$</td>
+                        <td>$$\lim_{n \to \infty} F_{X_n}(x) = F_X(x)$$ at all continuity points $x$ of $F_X$.</td>
+                        <td><strong>Central Limit Theorem (CLT):</strong> Describes the limiting shape of normalized statistics rather than pointwise convergence of variables.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="hierarchy-box">
+                <strong>Implication Hierarchy:</strong>
+                $$\begin{array}{c}
+                X_n \xrightarrow{a.s.} X \\
+                \Downarrow \\
+                X_n \xrightarrow{p} X \implies X_n \xrightarrow{d} X \\
+                \Uparrow \\
+                X_n \xrightarrow{L^2} X \quad (\text{via Chebyshev's Inequality: } P(|X_n - X| \ge \varepsilon) \le \frac{\mathbb{E}[|X_n - X|^2]}{\varepsilon^2})
+                \end{array}$$
+                Note that $X_n \xrightarrow{a.s.} X$ and $X_n \xrightarrow{L^2} X$ do not imply each other in general, and $X_n \xrightarrow{d} X$ implies $X_n \xrightarrow{p} c$ <em>only</em> when the limit is a degenerate constant $c$.
+            </div>
+
+            <h3>Why the $\sqrt{n}$ Term Appears in Convergence Theorems</h3>
+            <p>
+                The ubiquity of $\sqrt{n}$ stems directly from the <strong>additivity of variance under independence</strong> (or zero covariance). Let $X_1, \dots, X_n$ be i.i.d. random variables with mean $\mu$ and finite variance $\sigma^2 \in (0, \infty)$:
+            </p>
+            <ul>
+                <li><strong>Sum Variance:</strong> Because $\text{Cov}(X_i, X_j) = 0$ for $i \ne j$, the variance of $S_n = \sum_{i=1}^n X_i$ grows linearly with $n$:
+                    $$\text{Var}(S_n) = \sum_{i=1}^n \text{Var}(X_i) = n\sigma^2 \implies \text{SD}(S_n) = \sigma\sqrt{n}$$
+                </li>
+                <li><strong>Sample Mean Precision:</strong> Dividing by $n$ scales variance by $1/n^2$, yielding $\text{Var}(\bar{X}_n) = \frac{n\sigma^2}{n^2} = \frac{\sigma^2}{n}$. Thus, the standard error shrinks at the canonical parametric rate $\mathcal{O}(n^{-1/2})$:
+                    $$\text{SE}(\bar{X}_n) = \frac{\sigma}{\sqrt{n}}$$
+                </li>
+                <li><strong>Stabilizing Non-Degenerate Fluctuations (CLT):</strong> Because $\bar{X}_n - \mu \xrightarrow{p} 0$, we must magnify the vanishing deviation by $\sqrt{n}$ to keep the variance constant at $\sigma^2$:
+                    $$\text{Var}\left(\sqrt{n}(\bar{X}_n - \mu)\right) = n \cdot \frac{\sigma^2}{n} = \sigma^2 \implies \frac{\sqrt{n}(\bar{X}_n - \mu)}{\sigma} \xrightarrow{d} \mathcal{N}(0, 1)$$
+                    In statistical inference, this $\sqrt{n}$ scaling governs confidence interval widths ($\bar{x} \pm z_{\alpha/2}\frac{\sigma}{\sqrt{n}}$) and test statistic power.
+                </li>
+            </ul>
+
+            <h3>Interactive Visualization: SLLN ($a.s.$) vs. CLT ($\sqrt{n}$-Scaled Distribution)</h3>
+            <div class="control-group" style="background: #fafafa; padding: 14px; border-radius: 8px; border: 1px solid #e5d8f2; display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+                <div>
+                    <label for="convDist"><strong>Underlying i.i.d. Law:</strong></label>
+                    <select id="convDist" style="padding: 5px; border-radius: 6px; border: 1px solid #ccc;">
+                        <option value="exp">Exponential($\lambda=1$) — Skewed ($\mu=1, \sigma=1$)</option>
+                        <option value="unif">Uniform($0, 1$) — Bounded ($\mu=0.5, \sigma=1/\sqrt{12}$)</option>
+                        <option value="bern">Bernoulli($p=0.3$) — Discrete ($\mu=0.3, \sigma=\sqrt{0.21}$)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="convN"><strong>Sample Size ($n$):</strong></label>
+                    <input type="number" id="convN" value="100" min="10" max="1000" style="width: 75px; padding: 4px;">
+                </div>
+                <div>
+                    <label for="convPaths"><strong>Trajectories ($M$):</strong></label>
+                    <input type="number" id="convPaths" value="400" min="50" max="2000" style="width: 75px; padding: 4px;">
+                </div>
+                <div>
+                    <button type="button" onclick="runConvergenceSim()" class="btn" style="padding: 6px 14px; font-size: 0.9rem; cursor:pointer;">Simulate Convergence</button>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="convergenceCanvas"></canvas>
+            </div>
+            <div id="convergenceStats" style="margin-top: 12px;"></div>
+        </section>
+
+        <!-- PART 2: CONDITIONAL PROBABILITY & BAYESIAN INFERENCE -->
+        <section class="hw-card">
+            <h2>Part 2: Conditional Probability, Bayes' Theorem &amp; Statistical Inference</h2>
+            <p>
+                In probability theory, <strong>conditional probability</strong> quantifies how the probability of an event $A$ changes given that event $B$ (with $P(B) &gt; 0$) has occurred:
+                $$P(A \mid B) = \frac{P(A \cap B)}{P(B)}$$
+                By combining $P(A \cap B) = P(B \mid A)P(A)$ with the Law of Total Probability, we obtain <strong>Bayes' Theorem</strong>. In statistical inference, we treat the unknown parameter $\theta \in \Theta$ as a random variable and update our beliefs upon observing data $D$:
+                $$\pi(\theta \mid D) = \frac{\mathcal{L}(\theta \mid D) \, \pi(\theta)}{\int_{\Theta} \mathcal{L}(\vartheta \mid D) \, \pi(\vartheta) \, d\vartheta} \propto \mathcal{L}(\theta \mid D) \, \pi(\theta)$$
+            </p>
+
+            <h3>The Three Pillars of Bayesian Updating</h3>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Notation</th>
+                        <th>Role in Statistical Inference</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1. Prior Distribution</strong></td>
+                        <td>$\pi(\theta)$</td>
+                        <td>Encodes domain knowledge, historical data, or structural regularization about parameter $\theta$ <em>before</em> observing the current sample $D$.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Likelihood Function</strong></td>
+                        <td>$\mathcal{L}(\theta \mid D) = f(D \mid \theta)$</td>
+                        <td>Measures how compatible the observed data $D$ are with each candidate parameter value $\theta$ under the assumed generative model.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Posterior Distribution</strong></td>
+                        <td>$\pi(\theta \mid D)$</td>
+                        <td>The updated probability distribution over $\theta$ after combining prior beliefs with empirical evidence. Serves as the basis for point estimates (posterior mean/MAP) and credible intervals.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Concrete Examples &amp; Critical Evaluation</h3>
+            <ul>
+                <li><strong>Example 1 — Conjugate Beta-Binomial Model (Intrusion Detection / A/B Testing):</strong> Suppose we estimate an unknown attack success probability $\theta \in [0, 1]$. Using a conjugate $\text{Beta}(\alpha_0, \beta_0)$ prior and observing $k$ breaches in $n$ independent attempts ($k \mid \theta \sim \text{Binomial}(n, \theta)$), the posterior is analytically closed-form:
+                    $$\theta \mid k \sim \text{Beta}(\alpha_0 + k, \, \beta_0 + n - k), \quad \mathbb{E}[\theta \mid k] = \frac{\alpha_0 + k}{\alpha_0 + \beta_0 + n}$$
+                    Notice that the posterior mean is a precision-weighted average of the prior mean $\frac{\alpha_0}{\alpha_0+\beta_0}$ and the Maximum Likelihood Estimate (MLE) $\hat{\theta}_{\text{MLE}} = \frac{k}{n}$. As $n \to \infty$, the likelihood dominates and the posterior concentrates around the true parameter (Bernstein–von Mises theorem).
+                </li>
+                <li><strong>Example 2 — Intrusion Alert / Medical Screening (Base Rate Effect):</strong> Suppose a zero-day exploit affects $P(E) = 0.001$ of hosts (prior), and an IDS has sensitivity $P(+\mid E) = 0.99$ and false-positive rate $P(+\mid \neg E) = 0.02$. Upon an alert, the posterior probability of an actual exploit is:
+                    $$P(E \mid +) = \frac{0.99 \times 0.001}{0.99 \times 0.001 + 0.02 \times 0.999} \approx 0.0472 \text{ (4.72%)}$$
+                    Ignoring the low prior base rate leads to severe false-alarm misinterpretation.
+                </li>
+                <li><strong>Advantages vs. Limitations:</strong>
+                    <ul>
+                        <li><em>Advantages:</em> Direct probabilistic statements about parameters ($P(\theta \in [a,b] \mid D) = 0.95$), natural sequential updating (today's posterior becomes tomorrow's prior), and built-in regularization against small-sample overfitting.</li>
+                        <li><em>Limitations:</em> Sensitivity to subjective or poorly specified priors when sample size $n$ is small, and high computational cost of evaluating the marginal likelihood integral $\int \mathcal{L}(\theta \mid D)\pi(\theta)\,d\theta$ in high dimensions (requiring MCMC or Variational Inference).</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>Interactive Bayesian Updating Simulator (Beta-Binomial Model)</h3>
+            <div class="control-group" style="background: #fafafa; padding: 14px; border-radius: 8px; border: 1px solid #e5d8f2; display: flex; flex-wrap: wrap; gap: 14px; align-items: center;">
+                <div>
+                    <label for="priorAlpha"><strong>Prior $\alpha_0$:</strong></label>
+                    <input type="number" id="priorAlpha" value="2" min="0.5" max="50" step="0.5" style="width: 60px; padding: 4px;">
+                </div>
+                <div>
+                    <label for="priorBeta"><strong>Prior $\beta_0$:</strong></label>
+                    <input type="number" id="priorBeta" value="8" min="0.5" max="50" step="0.5" style="width: 60px; padding: 4px;">
+                </div>
+                <div>
+                    <label for="obsTrials"><strong>Trials ($n$):</strong></label>
+                    <input type="number" id="obsTrials" value="20" min="1" max="500" style="width: 65px; padding: 4px;">
+                </div>
+                <div>
+                    <label for="obsSuccess"><strong>Successes ($k$):</strong></label>
+                    <input type="number" id="obsSuccess" value="12" min="0" max="500" style="width: 65px; padding: 4px;">
+                </div>
+                <div>
+                    <button type="button" onclick="runBayesSim()" class="btn" style="padding: 6px 14px; font-size: 0.9rem; cursor:pointer;">Update Posterior</button>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="bayesCanvas"></canvas>
+            </div>
+            <div id="bayesStats" style="margin-top: 12px;"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Statistics MSc Portfolio | Hosted on GitHub Pages</p>
+    </footer>
+
+    <!-- INLINE SIMULATION SCRIPTS -->
+    <script>
+        // --- PART 1: CONVERGENCE SIMULATOR (SLLN + CLT) ---
+        window.runConvergenceSim = function() {
+            try {
+                var dist = document.getElementById("convDist").value;
+                var n = parseInt(document.getElementById("convN").value);
+                var M = parseInt(document.getElementById("convPaths").value);
+                var canvas = document.getElementById("convergenceCanvas");
+                if (!canvas) return;
+                var ctx = canvas.getContext("2d");
+
+                canvas.width = canvas.parentElement.clientWidth - 20;
+                canvas.height = canvas.parentElement.clientHeight - 20;
+                var width = canvas.width;
+                var height = canvas.height;
+
+                var mu = 1.0, sigma = 1.0;
+                if (dist === "unif") { mu = 0.5; sigma = Math.sqrt(1 / 12); }
+                if (dist === "bern") { mu = 0.3; sigma = Math.sqrt(0.3 * 0.7); }
+
+                function sampleX() {
+                    if (dist === "exp") return -Math.log(1 - Math.random());
+                    if (dist === "unif") return Math.random();
+                    return Math.random() < 0.3 ? 1 : 0;
+                }
+
+                var zScores = [];
+                var sampleMeans = [];
+                var samplePaths = [];
+                var pathsToDraw = Math.min(25, M);
+
+                for (var m = 0; m < M; m++) {
+                    var sum = 0;
+                    var path = [];
+                    for (var i = 1; i <= n; i++) {
+                        sum += sampleX();
+                        if (m < pathsToDraw) path.push(sum / i);
+                    }
+                    var xBar = sum / n;
+                    var z = Math.sqrt(n) * (xBar - mu) / sigma;
+                    sampleMeans.push(xBar);
+                    zScores.push(z);
+                    if (m < pathsToDraw) samplePaths.push(path);
+                }
+
+                ctx.clearRect(0, 0, width, height);
+                var halfW = width * 0.48;
+                var rightStart = width * 0.53;
+                var rightW = width * 0.46;
+
+                // Left Panel: SLLN Trajectories (X_bar -> mu)
+                ctx.strokeStyle = "#eef0f5";
+                ctx.strokeRect(0, 20, halfW, height - 35);
+                ctx.fillStyle = "#4a2574";
+                ctx.font = "bold 12px sans-serif";
+                ctx.fillText("Left: SLLN Trajectories (X̄ₙ → μ = " + mu.toFixed(2) + ")", 5, 14);
+
+                var yMin = Math.max(0, mu - 2.5 * sigma);
+                var yMax = mu + 2.5 * sigma;
+                function mapLeftX(step) { return (step / n) * halfW; }
+                function mapLeftY(val) {
+                    var clamped = Math.max(yMin, Math.min(yMax, val));
+                    return (height - 15) - ((clamped - yMin) / (yMax - yMin)) * (height - 35);
+                }
+
+                // True mean line
+                var muY = mapLeftY(mu);
+                ctx.strokeStyle = "#7b42bc";
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 4]);
+                ctx.beginPath(); ctx.moveTo(0, muY); ctx.lineTo(halfW, muY); ctx.stroke();
+                ctx.setLineDash([]);
+
+                var colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+                for (var p = 0; p < samplePaths.length; p++) {
+                    ctx.strokeStyle = colors[p % colors.length];
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    for (var i = 0; i < n; i++) {
+                        var px = mapLeftX(i + 1);
+                        var py = mapLeftY(samplePaths[p][i]);
+                        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                    }
+                    ctx.stroke();
+                }
+
+                // Right Panel: CLT Histogram of Z_n = sqrt(n)*(X_bar - mu)/sigma vs N(0,1)
+                ctx.strokeStyle = "#eef0f5";
+                ctx.strokeRect(rightStart, 20, rightW, height - 35);
+                ctx.fillStyle = "#4a2574";
+                ctx.fillText("Right: CLT Density of √n(X̄ₙ - μ)/σ vs N(0,1)", rightStart + 5, 14);
+
+                var bins = 20;
+                var zMin = -3.5, zMax = 3.5;
+                var binW = (zMax - zMin) / bins;
+                var counts = new Array(bins).fill(0);
+                for (var m = 0; m < M; m++) {
+                    var idx = Math.floor((zScores[m] - zMin) / binW);
+                    if (idx >= 0 && idx < bins) counts[idx]++;
+                }
+
+                var maxDens = 0.48;
+                var barPixelW = rightW / bins;
+                ctx.fillStyle = "rgba(123, 66, 188, 0.35)";
+                ctx.strokeStyle = "#7b42bc";
+                for (var b = 0; b < bins; b++) {
+                    var dens = counts[b] / (M * binW);
+                    var barH = (dens / maxDens) * (height - 40);
+                    ctx.fillRect(rightStart + b * barPixelW, (height - 15) - barH, barPixelW - 1, barH);
+                }
+
+                // Standard Normal PDF overlay
+                ctx.strokeStyle = "#ef4444";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (var px = 0; px <= rightW; px++) {
+                    var zVal = zMin + (px / rightW) * (zMax - zMin);
+                    var pdf = (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * zVal * zVal);
+                    var py = (height - 15) - (pdf / maxDens) * (height - 40);
+                    if (px === 0) ctx.moveTo(rightStart + px, py);
+                    else ctx.lineTo(rightStart + px, py);
+                }
+                ctx.stroke();
+
+                var withinEps = sampleMeans.filter(x => Math.abs(x - mu) < 0.1).length / M;
+                var zMean = zScores.reduce((a, b) => a + b, 0) / M;
+                var zVar = zScores.reduce((a, b) => a + Math.pow(b - zMean, 2), 0) / M;
+
+                document.getElementById("convergenceStats").innerHTML = `
+                    <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc;">
+                        <p style="margin: 3px 0;"><strong>Asymptotic Summary ($n = ${n}$, $M = ${M}$ paths):</strong></p>
+                        <p style="margin: 3px 0;">&bull; <strong>WLLN Concentration:</strong> $P(|\\bar{X}_n - \\mu| &lt; 0.1) \\approx ${(withinEps * 100).toFixed(1)}\\%$</p>
+                        <p style="margin: 3px 0;">&bull; <strong>CLT Normalized Statistic $Z_n = \\sqrt{n}(\\bar{X}_n - \\mu)/\\sigma$:</strong> Empirical Mean = <strong>${zMean.toFixed(3)}</strong> (target $0$), Empirical Variance = <strong>${zVar.toFixed(3)}</strong> (target $1$)</p>
+                    </div>
+                `;
+                if (window.MathJax && window.MathJax.typeset) window.MathJax.typeset();
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        // --- PART 2: BAYESIAN BETA-BINOMIAL SIMULATOR ---
+        function logGamma(z) {
+            var c = [76.18009172947146, -86.50532032941677, 24.01409824083091,
+                     -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+            var x = z, y = z;
+            var tmp = x + 5.5;
+            tmp -= (x + 0.5) * Math.log(tmp);
+            var ser = 1.000000000190015;
+            for (var j = 0; j < 6; j++) ser += c[j] / ++y;
+            return -tmp + Math.log(2.5066282746310005 * ser / x);
+        }
+
+        function betaPdf(x, a, b) {
+            if (x <= 0 || x >= 1) return 0;
+            var logB = logGamma(a) + logGamma(b) - logGamma(a + b);
+            return Math.exp((a - 1) * Math.log(x) + (b - 1) * Math.log(1 - x) - logB);
+        }
+
+        window.runBayesSim = function() {
+            try {
+                var a0 = parseFloat(document.getElementById("priorAlpha").value);
+                var b0 = parseFloat(document.getElementById("priorBeta").value);
+                var n = parseInt(document.getElementById("obsTrials").value);
+                var k = parseInt(document.getElementById("obsSuccess").value);
+                if (k > n) { k = n; document.getElementById("obsSuccess").value = n; }
+
+                var canvas = document.getElementById("bayesCanvas");
+                if (!canvas) return;
+                var ctx = canvas.getContext("2d");
+
+                canvas.width = canvas.parentElement.clientWidth - 20;
+                canvas.height = canvas.parentElement.clientHeight - 20;
+                var width = canvas.width;
+                var height = canvas.height;
+
+                var aPost = a0 + k;
+                var bPost = b0 + (n - k);
+
+                var steps = 200;
+                var priorVals = [], likVals = [], postVals = [];
+                var maxY = 0;
+
+                for (var i = 1; i < steps; i++) {
+                    var theta = i / steps;
+                    var pPrior = betaPdf(theta, a0, b0);
+                    // Normalized likelihood (equivalent to Beta(k+1, n-k+1) shape for visual comparison)
+                    var pLik = betaPdf(theta, k + 1, n - k + 1);
+                    var pPost = betaPdf(theta, aPost, bPost);
+
+                    priorVals.push({ x: theta, y: pPrior });
+                    likVals.push({ x: theta, y: pLik });
+                    postVals.push({ x: theta, y: pPost });
+
+                    maxY = Math.max(maxY, pPrior, pLik, pPost);
+                }
+                maxY *= 1.12;
+
+                ctx.clearRect(0, 0, width, height);
+
+                // Grid
+                ctx.strokeStyle = "#eef0f5";
+                ctx.lineWidth = 1;
+                for (var gx = 0; gx <= width; gx += width / 10) {
+                    ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, height - 20); ctx.stroke();
+                }
+
+                function drawCurve(arr, color, dashed) {
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = dashed ? 2 : 2.8;
+                    if (dashed) ctx.setLineDash([6, 4]); else ctx.setLineDash([]);
+                    ctx.beginPath();
+                    for (var i = 0; i < arr.length; i++) {
+                        var px = arr[i].x * width;
+                        var py = (height - 20) - (arr[i].y / maxY) * (height - 30);
+                        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                    }
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                drawCurve(priorVals, "#3b82f6", true);   // Prior (Blue dashed)
+                drawCurve(likVals, "#10b981", true);     // Likelihood (Green dashed)
+                drawCurve(postVals, "#7b42bc", false);   // Posterior (Purple solid)
+
+                // Legend
+                ctx.font = "bold 12px sans-serif";
+                ctx.fillStyle = "#3b82f6"; ctx.fillText("--- Prior Beta(" + a0 + ", " + b0 + ")", 12, 18);
+                ctx.fillStyle = "#10b981"; ctx.fillText("--- Scaled Likelihood (k=" + k + ", n=" + n + ")", 190, 18);
+                ctx.fillStyle = "#7b42bc"; ctx.fillText("— Posterior Beta(" + aPost + ", " + bPost + ")", 430, 18);
+
+                var priorMean = a0 / (a0 + b0);
+                var mle = k / n;
+                var postMean = aPost / (aPost + bPost);
+                var postVar = (aPost * bPost) / (Math.pow(aPost + bPost, 2) * (aPost + bPost + 1));
+
+                document.getElementById("bayesStats").innerHTML = `
+                    <div style="background: #f4f0f8; padding: 12px; border-radius: 6px; border-left: 4px solid #7b42bc;">
+                        <p style="margin: 3px 0;"><strong>Bayesian Updating Summary:</strong></p>
+                        <p style="margin: 3px 0;">&bull; <strong>Prior Mean $\\mathbb{E}[\\theta]$:</strong> ${priorMean.toFixed(4)} &nbsp;|&nbsp; <strong>Frequentist MLE ($k/n$):</strong> ${mle.toFixed(4)}</p>
+                        <p style="margin: 3px 0;">&bull; <strong>Posterior Mean $\\mathbb{E}[\\theta \\mid k]$:</strong> <strong>${postMean.toFixed(4)}</strong> &nbsp;|&nbsp; <strong>Posterior SD:</strong> ${Math.sqrt(postVar).toFixed(4)}</p>
+                    </div>
+                `;
+                if (window.MathJax && window.MathJax.typeset) window.MathJax.typeset();
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", function() {
+            window.runConvergenceSim();
+            window.runBayesSim();
+        });
+    </script>
+</body>
+</html>
